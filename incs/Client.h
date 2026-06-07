@@ -6,12 +6,12 @@
 /*   By: htrindad <htrindad@student.42lisboa.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/06 21:22:51 by htrindad          #+#    #+#             */
-/*   Updated: 2026/06/06 22:41:11 by htrindad         ###   ########.fr       */
+/*   Updated: 2026/06/07 03:26:40 by htrindad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
-#include "master.h"
+#include <master.h>
 
 class Client
 {
