@@ -6,7 +6,7 @@
 /*   By: htrindad <htrindad@student.42lisboa.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/07 02:43:38 by htrindad          #+#    #+#             */
-/*   Updated: 2026/06/07 05:36:41 by htrindad         ###   ########.fr       */
+/*   Updated: 2026/06/07 05:45:17 by htrindad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,7 +38,7 @@ void		Server::sockIt()
 		throw std::runtime_error("Failed to set the socket with option \"SOL_SOCKET\"");
 	if (fcntl(serverSocket, F_SETFL, O_NONBLOCK) < 0) // setting the server socket's option to (O_NONBLOCK) so that the accept function only returns an fd that is available.
 		throw std::runtime_error("Failed to set the socket with the option \"O_NONBLOCK\"");
-	if (bind(serverSocket, &addr, sizeof(addr)) < 0) // binding the socket to the address
+	if (::bind(serverSocket, (struct sockaddr *)&addr, sizeof(addr)) < 0) // binding the socket to the address
 		throw std::runtime_error("Failed to bind the socket to address");
 	if ()
 }
