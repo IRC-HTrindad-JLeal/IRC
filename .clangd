@@ -1,2 +1,13 @@
 CompileFlags:
-  Add: [-I../incs/]
+  Add: [-I../incs/, -Wall, -Werror, -Wextra]
+Diagnostics:
+  UnusedIncludes: Strict
+---
+# Disables header insertion on autocomplete
+InlayHints:
+  Designators: false
+---
+Config:
+  # This stops clangd from inserting missing headers
+  HeaderInsertion: Never
+

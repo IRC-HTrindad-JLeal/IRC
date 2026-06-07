@@ -6,7 +6,7 @@
 /*   By: jleal <jleal@student.42lisboa.com>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/06 19:37:03 by jleal             #+#    #+#             */
-/*   Updated: 2026/06/07 03:28:06 by htrindad         ###   ########.fr       */
+/*   Updated: 2026/06/07 05:26:36 by htrindad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,11 +23,9 @@
 #include <csignal>
 #include <iostream>
 #include <stdexcept>
+#include <fcntl.h>
 
 #define RED "\e[1;31m"
 #define WHI "\e[0;37m"
 #define GRE "\e[1;32m"
 #define YEL "\e[1;33m"
-
-#include "Client.h"
-#include "Server.h"

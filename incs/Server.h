@@ -6,12 +6,13 @@
 /*   By: htrindad <htrindad@student.42lisboa.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/06 22:53:42 by htrindad          #+#    #+#             */
-/*   Updated: 2026/06/07 03:26:08 by htrindad         ###   ########.fr       */
+/*   Updated: 2026/06/07 05:15:52 by htrindad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 #include <master.h>
+#include <Client.h>
 
 class Server
 {
@@ -23,8 +24,8 @@ class Server
 		std::vector<struct pollfd>	fds;
 	public:
 		Server();
-		void		serverInit();
-		void		serverSock();
+		void		serverInit(int port);
+		void		sockIt();
 		void		newClient();
 		void		retrieveData(int fd);
 		static void	handleSig(int signum);
