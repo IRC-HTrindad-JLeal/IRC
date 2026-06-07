@@ -1,0 +1,4 @@
+CompileFlags:
+  Add: [-I../incs/, -Wall, -Werror, -Wextra]
+Completion:
+  HeaderInsertion: Never
