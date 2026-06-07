@@ -6,7 +6,7 @@
 /*   By: htrindad <htrindad@student.42lisboa.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/06 22:53:42 by htrindad          #+#    #+#             */
-/*   Updated: 2026/06/07 05:15:52 by htrindad         ###   ########.fr       */
+/*   Updated: 2026/06/07 06:04:50 by htrindad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,7 @@ class Server
 		std::vector<struct pollfd>	fds;
 	public:
 		Server();
+		void		serverThread();
 		void		serverInit(int port);
 		void		sockIt();
 		void		newClient();

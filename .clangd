@@ -1,8 +1,4 @@
 CompileFlags:
   Add: [-I../incs/, -Wall, -Werror, -Wextra]
-Diagnostics:
-  UnusedIncludes: None
-  MissingIncludes: None
-InlayHints:
-  Designators: false
-HeaderInsertion: Never
+Completion:
+  HeaderInsertion: Never

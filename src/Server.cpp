@@ -6,7 +6,7 @@
 /*   By: htrindad <htrindad@student.42lisboa.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/07 02:43:38 by htrindad          #+#    #+#             */
-/*   Updated: 2026/06/07 05:45:17 by htrindad         ###   ########.fr       */
+/*   Updated: 2026/06/07 06:07:41 by htrindad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,10 +15,19 @@
 
 Server::Server() { sig = false; }
 
+void		Server::serverThread()
+{
+	//TODO
+	// Implement poll()
+}
+
 void		Server::serverInit(int port)
 {
 	this->port = port;
 	sockIt();
+	std::cout << GRE << serverSocket << "> Connection succesfull" << WHI << '\n';
+	serverThread();
+	closeFds();
 }
 
 void		Server::sockIt()
@@ -40,5 +49,10 @@ void		Server::sockIt()
 		throw std::runtime_error("Failed to set the socket with the option \"O_NONBLOCK\"");
 	if (::bind(serverSocket, (struct sockaddr *)&addr, sizeof(addr)) < 0) // binding the socket to the address
 		throw std::runtime_error("Failed to bind the socket to address");
-	if ()
+	if (listen(serverSocket, SOMAXCONN) < 0) // open the socket for the next connections
+		throw std::runtime_error("Failed to open the socket for incoming connections");
+	pfd.fd = serverSocket;
+	pfd.events = POLLIN; // set the poll fd for when there is data to read
+	pfd.revents = 0;
+	fds.push_back(pfd); // off you go
 }

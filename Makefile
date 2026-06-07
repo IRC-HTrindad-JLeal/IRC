@@ -1,11 +1,11 @@
 NAME = ircserv
 
 CPP = c++
-CPPFLAGS = -Wall -Werror -Wextra -O3 -std=c++98 -I./incs
+CPPFLAGS = -Wall -Werror -Wextra -O3 -std=c++98 -I./incs/
 IP = incs
 inc = $(IP)/master.h $(IP)/Client.h $(IP)/Server.h
 SP = src
-SRC = $(SP)/main.cpp
+SRC = $(SP)/main.cpp $(SP)/Server.cpp
 OBJ = $(SRC:.cpp=.o)
 OP = obj
 
