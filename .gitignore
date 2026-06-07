@@ -1,0 +1,40 @@
+# OS metadata
+.DS_Store
+._*
+Thumbs.db
+Desktop.ini
+
+# Editor and IDE metadata
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Local assistant/tooling metadata
+.claude/
+.codex/
+.agents/
+
+# Language server and local config
+.cache/
+compile_commands.json
+
+# C/C++ build outputs
+*.o
+*.obj
+*.a
+*.so
+*.dylib
+*.dll
+*.exe
+*.out
+
+# Project build artifacts
+ircserv
+obj/
+
+# Logs and local environment
+*.log
+.env
+.env.*

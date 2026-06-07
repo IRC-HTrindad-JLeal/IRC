@@ -1,0 +1,266 @@
+The Core Idea
+
+  A file descriptor, or fd, is just an integer handle that your process uses to talk to something managed by the OS: a file, pipe, terminal, or socket.
+
+  In this project, every connected IRC client is represented by a socket fd.
+
+  Example:
+
+  int server_fd = socket(...);   // listening socket
+  int client_fd = accept(...);   // one connected IRC client
+
+  A socket fd can be:
+
+  - readable: there is data waiting, or the peer disconnected
+  - writable: the OS can accept at least some outgoing data
+  - errored/hung up: the connection is broken or closed
+
+  poll() asks the OS:
+
+  > “Tell me which of these fds are ready, so I do not block.”
+
+  It does not read data for you. It only tells you when it is reasonable to call recv(), send(), or accept().
+
+  Why This Matters In ft_irc
+
+  Your subject is strict:
+
+  - your server must handle multiple clients simultaneously
+  - it must not hang
+  - all I/O must be non-blocking
+  - all socket activity must go through one poll() loop or equivalent
+  - calling recv() or send() without readiness from poll() can grade as 0
+
+  Relevant subject lines: subj/irc.subject.md:128, subj/irc.subject.md:131, subj/irc.subject.md:142.
+
+  So for this project, poll() is not just an optimization. It is the center of your server architecture.
+
+  Blocking vs Non-Blocking
+
+  Blocking recv():
+
+  recv(client_fd, buf, sizeof(buf), 0);
+
+  If no data exists, your whole server waits there. That means one silent client can freeze everyone else.
+
+  Non-blocking recv():
+
+  fcntl(client_fd, F_SETFL, O_NONBLOCK);
+  recv(client_fd, buf, sizeof(buf), 0);
+
+  If no data exists, recv() returns -1 with errno == EAGAIN or EWOULDBLOCK.
+
+  But the subject says: even if non-blocking makes this technically safe, you should not randomly try recv() or send() outside the event mechanism. Wait for poll() first.
+
+  How poll() Works
+
+  You give poll() an array of fds and events you care about:
+
+  struct pollfd pfd;
+
+  pfd.fd = client_fd;
+  pfd.events = POLLIN;   // I care when this fd is readable
+  pfd.revents = 0;       // poll() fills this
+
+  Common events:
+
+  POLLIN   fd is readable
+  POLLOUT  fd is writable
+  POLLERR  error happened
+  POLLHUP  peer hung up
+  POLLNVAL invalid fd
+
+  Then:
+
+  int ready = poll(&fds[0], fds.size(), -1);
+
+  The -1 means wait forever until at least one fd becomes ready.
+
+  After poll() returns, inspect revents:
+
+  if (fds[i].revents & POLLIN)
+  {
+      // safe/reasonable to recv() or accept()
+  }
+
+  if (fds[i].revents & POLLOUT)
+  {
+      // safe/reasonable to send()
+  }
+
+  For your IRC server:
+
+  - listening socket + POLLIN means: a new client is waiting, call accept()
+  - client socket + POLLIN means: client sent data, call recv()
+  - client socket + POLLOUT means: you can flush pending outgoing messages with send()
+
+  Important: TCP Is A Stream
+
+  IRC commands are line-based, but TCP does not preserve message boundaries.
+
+  A client may send:
+
+  PRIVMSG #a :hello\r\n
+
+  But your recv() may receive:
+
+  PRI
+
+  then later:
+
+  VMSG #a :hello\r\nNICK bob\r\n
+
+  So every client needs an input buffer.
+
+  Basic rule:
+
+  recv bytes
+  append to client.input_buffer
+  while buffer contains a full line ending in \r\n:
+      extract one line
+      parse command
+      execute command
+  leave incomplete data in the buffer
+
+  Your local reference notes this too: IRC_REFERENCE.md:107, IRC_REFERENCE.md:235.
+
+  Important: send() May Be Partial
+
+  This is wrong:
+
+  send(fd, reply.c_str(), reply.size(), 0);
+
+  and then assuming the whole reply was sent.
+
+  send() may send only part of the string.
+
+  So each client should also have an output queue/buffer:
+
+  client.output_buffer += reply
+
+  when poll says POLLOUT:
+      n = send(fd, output_buffer.data(), output_buffer.size(), 0)
+      remove only n sent bytes
+      if output_buffer empty:
+          stop asking poll for POLLOUT
+
+  Do not always enable POLLOUT. Most sockets are writable most of the time, so your loop may wake constantly and waste CPU. Enable POLLOUT only when that client has
+  pending data.
+
+  Typical ft_irc Poll Loop
+
+  Conceptually:
+
+  while (server_running)
+  {
+      rebuild_pollfds();
+
+      int ready = poll(&pollfds[0], pollfds.size(), -1);
+      if (ready < 0)
+          handle_poll_error();
+
+      for each pollfd:
+          if listening fd has POLLIN:
+              accept_new_clients();
+
+          else if client fd has POLLIN:
+              recv_client_data();
+              parse_complete_irc_lines();
+
+          if client fd has POLLOUT:
+              flush_client_output();
+
+          if fd has POLLERR/POLLHUP/POLLNVAL:
+              disconnect_client();
+  }
+
+  Your data model will usually look like:
+
+  std::vector<pollfd> pollfds;
+  std::map<int, Client> clients; // fd -> IRC state
+
+  Each Client stores:
+
+  fd
+  nickname
+  username
+  registered/pass state
+  input buffer
+  output buffer
+  joined channels
+  operator status, depending on your design
+
+  poll() vs Alternatives
+
+  select():
+
+  - older and very portable
+  - uses fd_set
+  - has an fd limit problem, commonly FD_SETSIZE
+  - awkward because it modifies the sets you pass in
+  - acceptable equivalent, but usually less pleasant than poll()
+
+  poll():
+
+  - portable POSIX API
+  - no fixed FD_SETSIZE issue like select()
+  - easy array of struct pollfd
+  - scans the whole array every time, so it is O(n)
+  - good choice for ft_irc
+
+  epoll():
+
+  - Linux-specific
+  - better for very large numbers of fds
+  - you register interest once with epoll_ctl()
+  - epoll_wait() returns only active fds
+  - more scalable than poll()
+  - not portable to macOS/BSD
+
+  kqueue():
+
+  - BSD/macOS equivalent idea
+  - can watch sockets, files, timers, signals, etc.
+  - powerful, but platform-specific
+  - not available on Linux by default
+
+  io_uring:
+
+  - modern Linux async I/O system
+  - powerful but much more complex
+  - not relevant for this project
+
+  For ft_irc, use poll() unless you have a strong reason not to. It is explicitly allowed in your function list at subj/irc.subject.md:86, and the subject also names
+  select, kqueue, and epoll as equivalents at subj/irc.subject.md:121.
+
+  What You Need To Remember
+
+  poll() is your traffic controller.
+
+  It tells you:
+
+  this fd can be accepted
+  this fd can be read
+  this fd can be written
+  this fd is broken
+
+  It does not:
+
+  read IRC commands
+  send full replies automatically
+  split messages
+  preserve command boundaries
+  manage clients
+  parse IRC
+
+  For this project, the winning mental model is:
+
+  socket fd = one connection
+  poll = readiness notification
+  recv = append bytes to client buffer
+  parser = extract complete IRC lines
+  command handler = update server/channel/client state
+  send queue = store outgoing replies
+  poll POLLOUT = flush queued replies
+
+  If you build around that model, the rest of the IRC server becomes much easier to reason about.
