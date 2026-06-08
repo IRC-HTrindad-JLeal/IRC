@@ -80,8 +80,7 @@ void		Server::closeFds()
 
 void		Server::clearClients()
 {
-	while (!clients.empty())
-		clients.pop_back();
+	clients.clear();
 }
 
 void		Server::handleSig(int signum)
