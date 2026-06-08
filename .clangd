@@ -1,4 +1,4 @@
 CompileFlags:
-  Add: [-I../incs/, -Wall, -Werror, -Wextra]
+  Add: [-I../incs/, -I../../incs/, -Wall, -Werror, -Wextra]
 Completion:
   HeaderInsertion: Never

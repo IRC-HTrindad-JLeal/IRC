@@ -6,13 +6,11 @@
 /*   By: htrindad <htrindad@student.42lisboa.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/08 18:30:35 by htrindad          #+#    #+#             */
-/*   Updated: 2026/06/08 20:16:00 by htrindad         ###   ########.fr       */
+/*   Updated: 2026/06/08 21:24:12 by htrindad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#pragma once
-#include <master.h>
-#include "Message.h"
+#include <Message.h>
 
 Message::Message() {}
 Message::~Message()
