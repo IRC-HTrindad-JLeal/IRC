@@ -6,7 +6,7 @@
 /*   By: htrindad <htrindad@student.42lisboa.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/06 22:42:28 by htrindad          #+#    #+#             */
-/*   Updated: 2026/06/08 12:06:11 by htrindad         ###   ########.fr       */
+/*   Updated: 2026/06/08 13:08:39 by htrindad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,7 +32,7 @@ int	main(int ac, char **av)
 	catch (std::exception &e)
 	{
 		ser.closeFds();
-		std::cerr << e.what() <<'\n';
+		std::cerr << RED << e.what() << WHI << '\n';
 	}
 	return 0;
 }
