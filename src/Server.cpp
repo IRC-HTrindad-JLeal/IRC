@@ -6,14 +6,14 @@
 /*   By: htrindad <htrindad@student.42lisboa.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/07 02:43:38 by htrindad          #+#    #+#             */
-/*   Updated: 2026/06/08 13:39:12 by htrindad         ###   ########.fr       */
+/*   Updated: 2026/06/08 16:35:59 by htrindad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <master.h>
 #include <Server.h>
 
-Server::Server() { sig = true; }
+Server::Server() { Server::sig = true; }
 
 void		Server::serverThread()
 {
@@ -81,10 +81,7 @@ void		Server::closeFds()
 	}
 }
 
-void		Server::clearClients()
-{
-	clients.clear();
-}
+void		Server::clearClients() { clients.clear(); }
 
 void		Server::handleSig(int signum)
 {
