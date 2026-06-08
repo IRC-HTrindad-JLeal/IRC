@@ -86,6 +86,5 @@ void		Server::clearClients()
 void		Server::handleSig(int signum)
 {
 	(void)signum;
-	std::cout << GRE << "shutting down" << WHI << '\n';
 	Server::sig = false;
 }
