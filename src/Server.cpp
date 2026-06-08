@@ -6,7 +6,7 @@
 /*   By: htrindad <htrindad@student.42lisboa.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/07 02:43:38 by htrindad          #+#    #+#             */
-/*   Updated: 2026/06/08 13:00:48 by htrindad         ###   ########.fr       */
+/*   Updated: 2026/06/08 13:06:10 by htrindad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,7 +34,6 @@ void		Server::serverInit(int port)
 	sockIt();
 	std::cout << GRE << serverSocket << "> Connection succesfull" << WHI << '\n';
 	serverThread();
-	closeFds();
 }
 
 void		Server::sockIt()
