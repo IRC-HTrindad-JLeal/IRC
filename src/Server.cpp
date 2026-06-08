@@ -6,22 +6,25 @@
 /*   By: htrindad <htrindad@student.42lisboa.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/07 02:43:38 by htrindad          #+#    #+#             */
-/*   Updated: 2026/06/08 13:06:10 by htrindad         ###   ########.fr       */
+/*   Updated: 2026/06/08 13:39:12 by htrindad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <master.h>
 #include <Server.h>
 
-Server::Server() { Server::sig = true; }
+Server::Server() { sig = true; }
 
 void		Server::serverThread()
 {
 	while (Server::sig)
 	{
+		//TODO
+		// Implement poll()
 		if (!fds.empty())
 			poll(&fds[0], fds.size(), 1000);
 	}
+	std::cout << YEL << "shutting down" << WHI << '\n';
 	closeFds();
 	clearClients();
 }

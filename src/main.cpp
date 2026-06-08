@@ -6,7 +6,7 @@
 /*   By: htrindad <htrindad@student.42lisboa.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/06 22:42:28 by htrindad          #+#    #+#             */
-/*   Updated: 2026/06/08 13:08:39 by htrindad         ###   ########.fr       */
+/*   Updated: 2026/06/08 13:39:55 by htrindad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,7 @@ int	main(int ac, char **av)
 	{
 		signal(SIGINT, Server::handleSig);
 		signal(SIGQUIT, Server::handleSig); // Handle the 2 signals
-		ser.serverInit(std::atoi(av[1])); // This needs a better way to detect if the argument is not something ilegal
+		ser.serverInit(std::atoi(av[1]));
 	}
 	catch (std::exception &e)
 	{
