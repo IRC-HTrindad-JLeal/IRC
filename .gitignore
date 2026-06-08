@@ -34,6 +34,9 @@ compile_commands.json
 ircserv
 obj/
 
+# Scratch/test scaffolding, not submitted
+tmp/
+
 # Logs and local environment
 *.log
 .env
