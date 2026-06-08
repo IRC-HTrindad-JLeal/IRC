@@ -19,8 +19,8 @@ void		Server::serverThread()
 {
 	while (Server::sig)
 	{
-		//TODO
-		// Implement poll()
+		if (!fds.empty())
+			poll(&fds[0], fds.size(), 1000);
 	}
 	closeFds();
 	clearClients();
