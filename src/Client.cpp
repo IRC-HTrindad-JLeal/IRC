@@ -1,35 +1,21 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   Server.h                                           :+:      :+:    :+:   */
+/*   Client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: htrindad <htrindad@student.42lisboa.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/06/06 22:53:42 by htrindad          #+#    #+#             */
-/*   Updated: 2026/06/08 12:47:48 by htrindad         ###   ########.fr       */
+/*   Created: 2026/06/08 12:15:35 by htrindad          #+#    #+#             */
+/*   Updated: 2026/06/08 12:33:32 by htrindad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#pragma once
 #include <master.h>
 #include <Client.h>
 
-class Server
-{
-	private:
-		int				port;
-		int				serverSocket;
-		static bool			sig;
-		std::vector<Client>		clients;
-		std::vector<struct pollfd>	fds;
-	public:
-		Server();
-		void		serverThread();
-		void		serverInit(int port);
-		void		sockIt();
-		void		newClient(const Client &cli);
-		void		retrieveData(int fd);
-		static void	handleSig(int signum);
-		void		closeFds();
-		void		clearClients();
-};
+Client::Client() {}
+
+int		Client::getFd() const			{ return fd; }
+std::string	Client::getIp() const			{ return ip; }
+void		Client::setFd(int FD)			{ fd = FD; }
+void		Client::setIp(const std::string &IP)	{ ip = IP; }

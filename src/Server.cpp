@@ -6,23 +6,30 @@
 /*   By: htrindad <htrindad@student.42lisboa.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/07 02:43:38 by htrindad          #+#    #+#             */
-/*   Updated: 2026/06/07 06:07:41 by htrindad         ###   ########.fr       */
+/*   Updated: 2026/06/08 13:00:48 by htrindad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <master.h>
 #include <Server.h>
 
-Server::Server() { sig = false; }
+Server::Server() { Server::sig = true; }
 
 void		Server::serverThread()
 {
-	//TODO
-	// Implement poll()
+	while (Server::sig)
+	{
+		//TODO
+		// Implement poll()
+	}
+	closeFds();
+	clearClients();
 }
 
 void		Server::serverInit(int port)
 {
+	if (port < 0 || port > PORT_MAX)
+		throw std::runtime_error("Port number out of bounds");
 	this->port = port;
 	sockIt();
 	std::cout << GRE << serverSocket << "> Connection succesfull" << WHI << '\n';
@@ -55,4 +62,32 @@ void		Server::sockIt()
 	pfd.events = POLLIN; // set the poll fd for when there is data to read
 	pfd.revents = 0;
 	fds.push_back(pfd); // off you go
+}
+
+void		Server::newClient(const Client &cli)
+{
+	clients.push_back(cli);
+}
+
+void		Server::closeFds()
+{
+	std::cout << YEL << "---closing all file descriptors---" << WHI << '\n';
+	while (!fds.empty())
+	{
+		close(fds.back().fd);
+		fds.pop_back();
+	}
+}
+
+void		Server::clearClients()
+{
+	while (!clients.empty())
+		clients.pop_back();
+}
+
+void		Server::handleSig(int signum)
+{
+	(void)signum;
+	std::cout << GRE << "shutting down" << WHI << '\n';
+	Server::sig = false;
 }
