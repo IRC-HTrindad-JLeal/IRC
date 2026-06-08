@@ -1,13 +1,10 @@
-NAME = ircserv
-
-CPP = c++
-CPPFLAGS = -Wall -Werror -Wextra -O3 -std=c++98 -I./incs/
-IP = incs
-inc = $(IP)/master.h $(IP)/Client.h $(IP)/Server.h
-SP = src
-SRC = $(SP)/main.cpp $(SP)/Server.cpp
-OBJ = $(SRC:.cpp=.o)
-OP = obj
+NAME		= ircserv
+CPP		= c++
+CPPFLAGS	= -Wall -Werror -Wextra -O3 -std=c++98 -I./incs/
+SP		= src
+SRC		= $(SP)/main.cpp $(SP)/Server.cpp
+OBJ		= $(SRC:$(SP)/%.cpp=$(OP)/%.o)
+OP		= obj
 
 $(OP)/%.o: $(SP)/%.cpp | $(OP)
 	@mkdir -p $(@D)
@@ -19,7 +16,11 @@ $(NAME): $(OBJ)
 all: $(NAME)
 
 clean:
+	@echo "Deleting obj/ directory"
 	rm -rf $(OP)
 
 fclean: clean
+	@echo "Deleting binary"
 	rm -f $(NAME)
+
+re: fclean all

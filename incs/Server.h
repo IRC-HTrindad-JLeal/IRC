@@ -6,7 +6,7 @@
 /*   By: htrindad <htrindad@student.42lisboa.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/06 22:53:42 by htrindad          #+#    #+#             */
-/*   Updated: 2026/06/07 06:04:50 by htrindad         ###   ########.fr       */
+/*   Updated: 2026/06/08 12:47:48 by htrindad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,7 @@ class Server
 		void		serverThread();
 		void		serverInit(int port);
 		void		sockIt();
-		void		newClient();
+		void		newClient(const Client &cli);
 		void		retrieveData(int fd);
 		static void	handleSig(int signum);
 		void		closeFds();
