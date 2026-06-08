@@ -13,7 +13,7 @@
 #include <master.h>
 #include <Client.h>
 
-Client::Client() {}
+Client::Client() : fd(-1), ip() {}
 
 int		Client::getFd() const			{ return fd; }
 std::string	Client::getIp() const			{ return ip; }
