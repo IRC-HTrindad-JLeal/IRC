@@ -6,14 +6,65 @@
 /*   By: htrindad <htrindad@student.42lisboa.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/07 02:43:38 by htrindad          #+#    #+#             */
-/*   Updated: 2026/06/08 16:35:59 by htrindad         ###   ########.fr       */
+/*   Updated: 2026/06/08 20:25:46 by htrindad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <master.h>
 #include <Server.h>
 
-Server::Server() { Server::sig = true; }
+Server::Server()
+{
+	std::vector<std::string> cmd;
+
+	Server::sig = true;
+	validCmds.push_back("PASS");
+	validCmds.push_back("NICK");
+	validCmds.push_back("USER");
+	validCmds.push_back("OPER");
+	validCmds.push_back("MODE");
+	validCmds.push_back("SERVICE");
+	validCmds.push_back("QUIT");
+	validCmds.push_back("SQUIT");
+	validCmds.push_back("JOIN");
+	validCmds.push_back("PART");
+	validCmds.push_back("MODE");
+	validCmds.push_back("TOPIC");
+	validCmds.push_back("NAMES");
+	validCmds.push_back("LIST");
+	validCmds.push_back("INVITE");
+	validCmds.push_back("KICK");
+	validCmds.push_back("PRIVMSG");
+	validCmds.push_back("NOTICE");
+	validCmds.push_back("MOTD");
+	validCmds.push_back("LUSERS");
+	validCmds.push_back("VERSION");
+	validCmds.push_back("STATS");
+	validCmds.push_back("LINKS");
+	validCmds.push_back("TIME");
+	validCmds.push_back("CONNECT");
+	validCmds.push_back("TRACE");
+	validCmds.push_back("ADMIN");
+	validCmds.push_back("INFO");
+	validCmds.push_back("SERVLIST");
+	validCmds.push_back("SQUERY");
+	validCmds.push_back("WHO");
+	validCmds.push_back("WHOIS");
+	validCmds.push_back("WHOWAS");
+	validCmds.push_back("KILL");
+	validCmds.push_back("PING");
+	validCmds.push_back("PONG");
+	validCmds.push_back("ERROR");
+	validCmds.push_back("AWAY");
+	validCmds.push_back("REHASH");
+	validCmds.push_back("DIE");
+	validCmds.push_back("RESTART");
+	validCmds.push_back("SUMMON");
+	validCmds.push_back("USERS");
+	validCmds.push_back("WALLOPS");
+	validCmds.push_back("USERHOST");
+	validCmds.push_back("ISON");
+}
 
 void		Server::serverThread()
 {
