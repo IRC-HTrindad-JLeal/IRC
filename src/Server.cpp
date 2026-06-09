@@ -6,7 +6,7 @@
 /*   By: htrindad <htrindad@student.42lisboa.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/07 02:43:38 by htrindad          #+#    #+#             */
-/*   Updated: 2026/06/08 21:21:02 by htrindad         ###   ########.fr       */
+/*   Updated: 2026/06/09 22:01:57 by htrindad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,6 +27,7 @@ Server::Server()
 	validCmds.push_back("JOIN");
 	validCmds.push_back("USER");
 	validCmds.push_back("NICK");
+	validCmds.push_back("CAP");
 }
 Server::~Server()
 {
