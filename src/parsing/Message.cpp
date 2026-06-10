@@ -6,7 +6,7 @@
 /*   By: htrindad <htrindad@student.42lisboa.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/08 18:30:35 by htrindad          #+#    #+#             */
-/*   Updated: 2026/06/10 19:52:35 by htrindad         ###   ########.fr       */
+/*   Updated: 2026/06/10 20:33:08 by htrindad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -118,12 +118,11 @@ static void			commandParsing(const std::string &cmd, const std::vector<std::stri
 
 static inline void			setParam(std::vector<std::string> &param, Message &message, const std::vector<std::string> &cmdLst)
 {
-	if (std::isupper(static_cast<unsigned char>(param.front()[0])))
-	{
-		setCommand(param.front(), message, cmdLst);
-		param.erase(param.begin());
-		commandParsing(message.getCommand(), param, message);
-	}
+	if (param.empty() || !std::isupper(static_cast<unsigned char>(param.front()[0])))
+		thrower();
+	setCommand(param.front(), message, cmdLst);
+	param.erase(param.begin());
+	commandParsing(message.getCommand(), param, message);
 }
 
 Message					Message::parse(const std::string &raw, const std::vector<std::string> &cmdLst)
