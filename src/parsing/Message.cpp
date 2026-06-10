@@ -6,7 +6,7 @@
 /*   By: htrindad <htrindad@student.42lisboa.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/08 18:30:35 by htrindad          #+#    #+#             */
-/*   Updated: 2026/06/10 18:55:09 by htrindad         ###   ########.fr       */
+/*   Updated: 2026/06/10 19:52:35 by htrindad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,7 @@ void				Message::setMiddle(const std::string &mid) 		{ middle = mid; }
 void				Message::setTrailing(const std::string &trail)		{ trailing = trail; }
 
 
-static void		setCommand(const std::string &cmd, Message &message, const std::vector<std::string> &cmdLst)
+static inline void		setCommand(const std::string &cmd, Message &message, const std::vector<std::string> &cmdLst)
 {
 	if (find(cmdLst.begin(), cmdLst.end(), cmd) == cmdLst.end())
 		throw std::runtime_error("command not found");
@@ -86,9 +86,10 @@ static void			commandParsing(const std::string &cmd, const std::vector<std::stri
 	param.push_back(*it);
 	if ((cond == NONTSI && p.size() > 1)
 		||(cond == SINGLE && p.size() != 1)
+		|| (cond == STDBLE && !(p.size() >= 1 && p.size() <= 2))
 		|| (cond == DOUBLE && realSize(it, p.end()) != 2)
 		|| (cond == DBLTRI && !(p.size() > 1 && p.size() < 4))
-		|| (cond == QUAD && p.size() != 4)
+		|| (cond == QUAD && realSize(it, p.end()) != 4)
 		|| (cond == DTQUAD && !(p.size() > 1 && p.size() < 5))
 		|| (channel && (*it)[0] != '#'))
 		thrower();
@@ -135,6 +136,20 @@ Message					Message::parse(const std::string &raw, const std::vector<std::string
 	while (ss >> buffer)
 		params.push_back(buffer);
 	// step 1
+	message.setMessage(ss.str());
 	setParam(params, message, cmdLst);
+	// step 2
+	const std::vector<std::string> &p = message.getParams();
+	if (!p.empty() && p.back()[0] == ':')
+		message.setTrailing(p.back());
+	// step 3
+	if (!params.empty())
+	{
+		std::string middle = params.front();
+		std::vector<std::string>::const_iterator it = params.begin() + 1;
+		while (it != params.end() && (*it)[0] != ':')
+			middle += ' ' + *it++;
+		message.setMiddle(middle);
+	}
 	return message;
 }
