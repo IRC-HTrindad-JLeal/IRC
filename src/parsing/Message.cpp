@@ -6,7 +6,7 @@
 /*   By: htrindad <htrindad@student.42lisboa.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/08 18:30:35 by htrindad          #+#    #+#             */
-/*   Updated: 2026/06/10 00:16:02 by htrindad         ###   ########.fr       */
+/*   Updated: 2026/06/10 18:55:09 by htrindad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,13 +58,19 @@ static void			commandParsing(const std::string &cmd, const std::vector<std::stri
 	bool						channel = false;
 
 	if (p.empty())
-		thrower();
+	{
+		if (cmd != "QUIT")
+			thrower();
+		message.setParams(param);
+		return ;
+	}
+	if (cmd == "QUIT")
+		cond = NONTSI;
 	if (cmd == "JOIN" || cmd == "NICK"
 		|| cmd == "PASS" || cmd == "PING")
 		cond = SINGLE;
-	if (cmd == "USER")
-		cond = QUAD;
-	if (cmd == "CAP")
+	if (cmd == "CAP" || cmd == "PING"
+		||cmd == "PONG")
 		cond = STDBLE;
 	if (cmd == "MODE")
 		cond = DTQUAD;
@@ -72,11 +78,14 @@ static void			commandParsing(const std::string &cmd, const std::vector<std::stri
 		cond = DOUBLE;
 	if (cmd == "TOPIC" || cmd == "KICK")
 		cond = DBLTRI;
+	if (cmd == "USER")
+		cond = QUAD;
 	if (cmd == "JOIN" || cmd == "MODE"
 		|| cmd == "KICK" || cmd == "TOPIC")
 		channel = true;
 	param.push_back(*it);
-	if ((cond == SINGLE && p.size() != 1)
+	if ((cond == NONTSI && p.size() > 1)
+		||(cond == SINGLE && p.size() != 1)
 		|| (cond == DOUBLE && realSize(it, p.end()) != 2)
 		|| (cond == DBLTRI && !(p.size() > 1 && p.size() < 4))
 		|| (cond == QUAD && p.size() != 4)
@@ -101,13 +110,9 @@ static void			commandParsing(const std::string &cmd, const std::vector<std::stri
 			it++;
 		}
 	}
-	it--;
-	if (cmd == "USER" && (*it)[0] != ':')
+	if (cmd == "USER" && param.back()[0] != ':')
 		thrower();
-	if (cond)
-		message.setParams(param);
-	else
-		thrower();
+	message.setParams(param);
 }
 
 static inline void			setParam(std::vector<std::string> &param, Message &message, const std::vector<std::string> &cmdLst)

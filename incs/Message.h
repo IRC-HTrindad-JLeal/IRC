@@ -6,7 +6,7 @@
 /*   By: htrindad <htrindad@student.42lisboa.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/08 17:58:06 by htrindad          #+#    #+#             */
-/*   Updated: 2026/06/09 23:23:25 by htrindad         ###   ########.fr       */
+/*   Updated: 2026/06/10 18:51:05 by htrindad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,7 @@
 enum conditions
 {
 	NONE,	// undefined
+	NONTSI,	// takes an optional parameter
 	SINGLE,	// takes a single parameter
 	STDBLE, // short for `SINGLE_TO_DOUBLE`. Takes from 1 to 2 parameters
 	DOUBLE,	// takes 2 parameters
