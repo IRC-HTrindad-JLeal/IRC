@@ -6,11 +6,10 @@
 /*   By: htrindad <htrindad@student.42lisboa.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/08 12:15:35 by htrindad          #+#    #+#             */
-/*   Updated: 2026/06/08 12:33:32 by htrindad         ###   ########.fr       */
+/*   Updated: 2026/06/08 20:27:33 by htrindad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <master.h>
 #include <Client.h>
 
 Client::Client() : fd(-1), ip() {}

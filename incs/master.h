@@ -6,7 +6,7 @@
 /*   By: jleal <jleal@student.42lisboa.com>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/06 19:37:03 by jleal             #+#    #+#             */
-/*   Updated: 2026/06/08 13:00:39 by htrindad         ###   ########.fr       */
+/*   Updated: 2026/06/08 20:10:54 by htrindad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,8 @@
 #include <csignal>
 #include <iostream>
 #include <stdexcept>
+#include <sstream>
+#include <algorithm>
 #include <fcntl.h>
 #include <limits.h>
 

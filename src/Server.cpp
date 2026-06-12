@@ -6,14 +6,35 @@
 /*   By: htrindad <htrindad@student.42lisboa.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/07 02:43:38 by htrindad          #+#    #+#             */
-/*   Updated: 2026/06/08 16:35:59 by htrindad         ###   ########.fr       */
+/*   Updated: 2026/06/09 22:01:57 by htrindad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <master.h>
 #include <Server.h>
 
-Server::Server() { Server::sig = true; }
+Server::Server()
+{
+	Server::sig = true;
+	validCmds.push_back("PASS");
+	validCmds.push_back("QUIT");
+	validCmds.push_back("PING");
+	validCmds.push_back("PONG");
+	validCmds.push_back("KICK");
+	validCmds.push_back("INVITE");
+	validCmds.push_back("TOPIC");
+	validCmds.push_back("MODE");
+	validCmds.push_back("PRIVMSG");
+	validCmds.push_back("JOIN");
+	validCmds.push_back("USER");
+	validCmds.push_back("NICK");
+	validCmds.push_back("CAP");
+}
+Server::~Server()
+{
+	validCmds.clear();
+	clearClients();
+	closeFds();
+}
 
 void		Server::serverThread()
 {
@@ -81,7 +102,7 @@ void		Server::closeFds()
 	}
 }
 
-void		Server::clearClients() { clients.clear(); }
+void		Server::clearClients() { if (!clients.empty()) clients.clear(); }
 
 void		Server::handleSig(int signum)
 {

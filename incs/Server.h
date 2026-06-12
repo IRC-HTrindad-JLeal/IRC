@@ -6,7 +6,7 @@
 /*   By: htrindad <htrindad@student.42lisboa.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/06 22:53:42 by htrindad          #+#    #+#             */
-/*   Updated: 2026/06/08 12:47:48 by htrindad         ###   ########.fr       */
+/*   Updated: 2026/06/08 21:12:26 by htrindad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,8 +22,10 @@ class Server
 		static bool			sig;
 		std::vector<Client>		clients;
 		std::vector<struct pollfd>	fds;
+		std::vector<std::string>	validCmds;
 	public:
 		Server();
+		~Server();
 		void		serverThread();
 		void		serverInit(int port);
 		void		sockIt();
