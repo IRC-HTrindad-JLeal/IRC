@@ -11,7 +11,7 @@ $(OP)/%.o: $(SP)/%.cpp
 	$(CPP) $(CPPFLAGS) -c $< -o $@
 
 $(NAME): $(OBJ)
-	$(CPP) $(CPPFLAGS) -o $(NAME)
+	$(CPP) $(CPPFLAGS) $(OBJ) -o $(NAME)
 
 all: $(NAME)
 

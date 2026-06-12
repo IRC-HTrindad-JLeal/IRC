@@ -12,9 +12,13 @@
 
 #include <Server.h>
 
+// We were getting some linker errors when building the obj, since it's a static member variable it needs to be defined outside of the header because it's technically allocated during the program's lifetime and not just when the class is instanciated.
+// We might need to consider if it's worth leaving it as a static variable. I don't remember the subject rules aroud global variables.
+bool	Server::sig = true;
+
 Server::Server()
 {
-	Server::sig = true;
+	// Server::sig = true;
 	validCmds.push_back("PASS");
 	validCmds.push_back("QUIT");
 	validCmds.push_back("PING");
