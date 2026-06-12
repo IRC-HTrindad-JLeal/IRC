@@ -6,7 +6,7 @@
 /*   By: htrindad <htrindad@student.42lisboa.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/08 18:30:35 by htrindad          #+#    #+#             */
-/*   Updated: 2026/06/12 17:28:48 by htrindad         ###   ########.fr       */
+/*   Updated: 2026/06/12 17:30:18 by htrindad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -91,7 +91,7 @@ static void			commandParsing(const std::string &cmd, const std::vector<std::stri
 		|| (cond == DBLTRI && !(p.size() > 1 && p.size() < 4))
 		|| (cond == QUAD && realSize(it, p.end()) != 4)
 		|| (cond == DTQUAD && !(p.size() > 1 && p.size() < 5))
-		|| ((channel && (*it)[0] != '#') ||
+		|| ((channel && (*it)[0] != '#'))
 		|| ((*it)[0] == '#' && (*it).length() == 1))
 		thrower();
 	it++;
