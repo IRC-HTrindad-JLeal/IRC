@@ -17,7 +17,7 @@ int	main(int ac, char **av)
 {
 	Server	ser;
 
-	if (ac < 3)
+	if (ac != 3)
 	{
 		std::cerr << "Insufficient args\n";
 		return -1;
@@ -27,7 +27,7 @@ int	main(int ac, char **av)
 	{
 		signal(SIGINT, Server::handleSig);
 		signal(SIGQUIT, Server::handleSig); // Handle the 2 signals
-		ser.serverInit(std::atoi(av[1]));
+		ser.serverInit(std::atoi(av[1]), av[2]);
 	}
 	catch (std::exception &e)
 	{
