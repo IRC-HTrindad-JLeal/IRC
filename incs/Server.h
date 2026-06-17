@@ -20,12 +20,13 @@
 class Server
 {
 	private:
+		static volatile sig_atomic_t sig;
+
 		int							port;
 		int							serverSocket;
-		static bool					sig;
 
 		std::map<int, Client>			clients;
-		std::map<std::string, int>		nicknames;
+		std::map<std::string, int>		nicknames; // The nicknames map is just an index of nicknames for quick search, only update nicknames through the registerNickanme() function.
 		std::map<std::string, Channel>	channels;
 
 		std::vector<struct pollfd>	fds;
@@ -35,7 +36,7 @@ class Server
 		void	disconnectClient(int fd);
 		bool	flushClientOutput(int fd);
 		void	setPollOut(int fd, bool enabled);
-		void	dispatchMessage(Client &client, const Message &msg);
+		bool	dispatchMessage(Client &client, const Message &msg);
 
 	public:
 		Server();
@@ -51,7 +52,7 @@ class Server
 		void				closeFds();
 		void				clearClients();
 		const std::string	&getPassword() const;
-		void				sendToClient(Client &client, const std::string &reply);
+		bool				sendToClient(Client &client, const std::string &reply);
 
 		Client	*findClientByFd(int fd);
 		Client	*findClientByNickname(const std::string &nickname);
@@ -62,4 +63,5 @@ class Server
 		Channel	*findChannel(const std::string &name);
 		Channel	&getOrCreateChannel(const std::string &name);
 		void	removeClientFromChannels(int fd);
+		bool	broadcastToChannel(const Channel &channel, const std::string &message, int exceptFd);
 };

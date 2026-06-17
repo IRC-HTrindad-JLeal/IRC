@@ -15,7 +15,7 @@
 
 Client::Client()
 	: fd(-1),
-	op(false),
+	queuedBytes(0),
 	passAccepted(false),
 	hasNickname(false),
 	hasUsername(false),
@@ -26,10 +26,10 @@ Client::~Client() {}
 
 int Client::getFd() const { return fd; }
 const std::string &Client::getIp() const { return ip; }
-bool Client::getOp() const { return op; }
+//bool Client::getOp() const { return op; }
 
 void Client::setFd(int fd) { this->fd = fd; }
-void Client::setOp(bool op) { this->op = op; }
+//void Client::setOp(bool op) { this->op = op; }
 void Client::setIp(const std::string &ip) { this->ip = ip; }
 
 const std::string &Client::getNickname() const { return nickname; }
@@ -103,19 +103,43 @@ std::string Client::popLine() {
 	return (line);
 }
 
-void Client::queueMessage(const std::string &message) {
+bool Client::queueMessage(const std::string &message) {
 	if (message.empty())
-		return;
+		return (true);
+	if (message.size() > MAX_QUEUED_BYTES)
+		return (false);
+	if (queuedBytes > MAX_QUEUED_BYTES - message.size())
+		return (false);
+
 	sendQueue.push_back(message);
+	queuedBytes += message.size();
+	return (true);
 }
 
-bool Client::hasPendingOutput() const { return (!sendQueue.empty()); }
+void	Client::consumeOutput(size_t bytes)
+{
+	if (sendQueue.empty() || bytes == 0)
+		return;
 
-std::string &Client::frontOutput() { return (sendQueue.front()); }
+	std::string &msg = sendQueue.front();
 
-void Client::popOutput() { sendQueue.pop_front(); }
+	if (bytes >= msg.size())
+	{
+		queuedBytes -= msg.size();
+		sendQueue.pop_front();
+	}
+	else
+	{
+		msg.erase(0, bytes);
+		queuedBytes -= bytes;
+	}
+}
 
-void Client::updateRegistration() {
+bool		Client::hasPendingOutput() const	{ return (!sendQueue.empty()); }
+
+std::string	&Client::frontOutput()				{ return (sendQueue.front()); }
+
+void	Client::updateRegistration() {
 	hasNickname = !nickname.empty();
 	hasUsername = !username.empty();
 	registered = (passAccepted && hasNickname && hasUsername);

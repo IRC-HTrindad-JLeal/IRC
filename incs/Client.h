@@ -18,10 +18,12 @@ class Client
 	private:
 		int			fd;
 		std::string	ip;
-		bool		op;
+		// the Channel class should handle operators
+		// bool		op;
 
 		std::string				readBuffer;
 		std::deque<std::string>	sendQueue;
+		size_t					queuedBytes;
 		
 		std::string	nickname;
 		std::string	username;
@@ -39,7 +41,7 @@ class Client
 
 		int					getFd() const;
 		const std::string	&getIp() const;
-		bool				getOp() const;
+		//bool				getOp() const;
 
 		const std::string	&getNickname() const;
 		const std::string	&getUsername() const;
@@ -50,7 +52,7 @@ class Client
 
 		void	setFd(int fd);
 		void	setIp(const std::string &ip);
-		void	setOp(bool op);
+		//void	setOp(bool op);
 		
 		void	setNick(const std::string &nickname);
 		void	setUsername(const std::string &username);
@@ -61,10 +63,10 @@ class Client
 		bool		hasCompleteLine() const;
 		std::string	popLine();
 	
-		void		queueMessage(const std::string &message);
+		bool		queueMessage(const std::string &message);
 		bool		hasPendingOutput() const;
 		std::string	&frontOutput();
-		void		popOutput();
+		void		consumeOutput(size_t bytes);
 
 		void	updateRegistration();
 };

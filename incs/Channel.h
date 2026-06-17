@@ -48,7 +48,7 @@ class Channel
 		void	clearKey();
 
 		void	setUserLimit(size_t limit);
-		void	clearUserLimt();
+		void	clearUserLimit();
 
 		void	setInviteOnly(bool value);
 		void	setTopicOnly(bool value);

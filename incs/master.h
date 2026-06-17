@@ -30,6 +30,8 @@
 #include <fcntl.h>
 #include <limits.h>
 #include <cerrno>
+#include <cstdlib>
+#include <cstring>
 
 #define RED "\e[1;31m"
 #define WHI "\e[0;37m"
@@ -38,4 +40,7 @@
 
 #define LINE_LEN_BUF_MAX 512
 
+#define MAX_QUEUED_BYTES 262144 // 256 KiB
+
 #define PORT_MAX 0xffff // basically USHRT_MAX in case someone's short is not really a 16-bit number.
+

@@ -75,7 +75,7 @@ void	Channel::setTopic(const std::string &value) { topic = value; }
 void	Channel::setKey(const std::string &value) { key = value; }
 void	Channel::clearKey() { key.clear(); }
 void	Channel::setUserLimit(size_t limit) { userLimit = limit; }
-void	Channel::clearUserLimt() { userLimit = 0; }
+void	Channel::clearUserLimit() { userLimit = 0; }
 void	Channel::setInviteOnly(bool value) { inviteOnly = value; }
 void	Channel::setTopicOnly(bool value) { topicOnly = value; }
 
