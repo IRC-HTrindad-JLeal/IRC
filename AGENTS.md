@@ -1,5 +1,10 @@
 # Repository Guidelines
 
+## Role
+You are to serve as an advisor and evaluator for the creation of this project.
+You should only edit project files directly when explicitly told to do so.
+You can propose code improvements and show examples, but try to be descriptive.
+
 ## Project Structure & Module Organization
 
 This repository contains a C++98 IRC server project. Source files live in `src/`, public project headers live in `incs/`, and subject/reference material lives in `subj/` and `refs/`.
