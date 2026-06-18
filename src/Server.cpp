@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: htrindad <htrindad@student.42lisboa.com>   +#+  +:+       +#+        */
+/*   By: mely-pan <mely-pan@student.42lisboa.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/07 02:43:38 by htrindad          #+#    #+#             */
-/*   Updated: 2026/06/14 23:18:07 by jordanleal       ###   ########.fr       */
+/*   Updated: 2026/06/18 21:45:34 by mely-pan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -293,44 +293,7 @@ bool Server::retrieveData(int fd)
 
 bool		Server::dispatchMessage(Client &client, const Message &msg)
 {
-	std::string cmd = msg.getCommand();
-
-	if (cmd.empty())
-		return (true);
-
-	if (cmd == "QUIT")
-		return (false);
-
-	if (cmd == "PASS")
-	{
-		// handlePass()
-		return (true);
-	}
-	if (cmd == "NICK")
-	{
-		// handleNick()
-		return (true);
-	}
-	if (cmd == "USER")
-	{
-		// handleUser()
-		return (true);
-	}
-	if (cmd == "PING")
-	{
-		// handlePing()
-		return (true);
-	}
-
-	if (!client.isRegistered())
-	{
-		//send numeric ERR_NOTREGISTERED;
-		return (true);
-	}
-
-	// commands requring client registration
-
-	return (true);
+	return (CommandHandler::execute(*this, client, msg));
 }
 
 bool		Server::sendToClient(Client &client, const std::string &reply)
