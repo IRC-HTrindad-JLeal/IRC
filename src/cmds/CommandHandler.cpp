@@ -6,7 +6,7 @@
 /*   By: mely-pan <mely-pan@student.42lisboa.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/18 16:55:39 by mely-pan          #+#    #+#             */
-/*   Updated: 2026/06/19 00:08:42 by mely-pan         ###   ########.fr       */
+/*   Updated: 2026/06/19 12:13:53 by mely-pan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,7 +34,7 @@ void	CommandHandler::inItHandlers()
 	_handlers["KICK"] = &CommandHandler::kick;
 }
 
-bool	CommandHAndler::requiresAuth(const std::string &cmd) const
+bool	CommandHandler::requiresAuth(const std::string &cmd) const
 {
 	return (
 		cmd != "PASS" &&
@@ -54,7 +54,7 @@ bool	CommandHandler::execute(Server &server, Client &client, const Message &msg)
 	return dispatch(cmd, server, client, msg);
 }
 
-bool	CommandHandler::dispatch(const std::string &cmd, Server&Server, Client &client, const Message &msg)
+bool	CommandHandler::dispatch(const std::string &cmd, Server &server, Client &client, const Message &msg)
 {
 	if (requiresAuth(cmd) && !client.isRegistered())
 	{
@@ -69,5 +69,43 @@ bool	CommandHandler::dispatch(const std::string &cmd, Server&Server, Client &cli
 		return true;
 	}
 	return (this->*(it->second))(server, client, msg);
+}
+
+bool	CommandHandler::pass(Server &server, Client &client, const Message &msg)
+{
+	if (client.isPassAccepted())
+		return true;
+	if (msg.getParams().empty())
+	{
+		server.sendToClient(client, ":server 461 :Not enough parameters");
+		return true;
+	}
+	if (msg.getParams()[0] != server.getPassword())
+	{
+		server.sendToClient(client, ":server 464 :Password incorrect");
+		return true;
+	}
+
+	client.setPassAccepted(true);
+	return (true);
+}
+
+bool	CommandHandler::nick(Server &server, Client &client, const Message &msg)
+{
+	if (msg.getParams().empty())
+	{
+		server.sendToClient(client, ":server 461 :Not enough parameters");
+		return true;
+	}
+	
+	const std::string &nick = msg.getParams()[0];
+	
+	if(!server.isNicknameAvailable(nick))
+	{
+		server.sendToClient(client, ":server 433 :Nickname is already in use");
+		return true;
+	}
+
+	server.registerNickname(client, nick);
 }
 
