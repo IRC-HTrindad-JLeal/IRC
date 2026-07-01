@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: htrindad <htrindad@student.42lisboa.com>   +#+  +:+       +#+        */
+/*   By: mely-pan <mely-pan@student.42lisboa.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/08 12:15:35 by htrindad          #+#    #+#             */
-/*   Updated: 2026/06/14 18:29:21 by jordanleal       ###   ########.fr       */
+/*   Updated: 2026/07/01 20:35:15 by mely-pan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,7 +56,6 @@ void Client::setRealname(const std::string &realname) {
 
 void Client::setPassAccepted(bool value) {
 	this->passAccepted = value;
-	updateRegistration();
 }
 
 bool Client::appendToReadBuffer(const std::string &data) {
