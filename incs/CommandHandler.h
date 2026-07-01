@@ -6,7 +6,7 @@
 /*   By: mely-pan <mely-pan@student.42lisboa.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/18 21:17:45 by mely-pan          #+#    #+#             */
-/*   Updated: 2026/06/18 22:47:55 by mely-pan         ###   ########.fr       */
+/*   Updated: 2026/06/24 16:41:31 by mely-pan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,7 +23,7 @@ class CommandHandler
 		typedef bool (CommandHandler::*CommandFt)(Server &, Client &, const Message &);
 		std::map<std::string, CommandFt>	_handlers;
 
-		bool	dispatch(const std::string &cmd, Server&Server, Client &client, const Message &msg);
+		bool	dispatch(const std::string &cmd, Server&server, Client &client, const Message &msg);
 		bool	requiresAuth(const std::string &cmd) const;
 		
 		void	inItHandlers();
