@@ -6,16 +6,18 @@
 /*   By: mely-pan <mely-pan@student.42lisboa.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/18 16:55:39 by mely-pan          #+#    #+#             */
-/*   Updated: 2026/06/19 12:13:53 by mely-pan         ###   ########.fr       */
+/*   Updated: 2026/06/24 18:17:50 by mely-pan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <../../incs/CommandHandler.h>
+#include <CommandHandler.h>
 
-void	CommandHandler::CommandHandler()
+CommandHandler::CommandHandler()
 {
 	inItHandlers();
 }
+
+CommandHandler::~CommandHandler() {}
 
 void	CommandHandler::inItHandlers()
 {
@@ -58,14 +60,14 @@ bool	CommandHandler::dispatch(const std::string &cmd, Server &server, Client &cl
 {
 	if (requiresAuth(cmd) && !client.isRegistered())
 	{
-		Server.sendToClient(client, ":server 451 :You have not registered");
+		server.sendToClient(client, ":server 451 :You have not registered");
 		return true;
 	}
 	std::map<std::string, CommandFt>::iterator it = _handlers.find(cmd);
 
 	if (it == _handlers.end())
 	{
-		Server.sendToClient(client, ":server 421 :Uknown command");
+		server.sendToClient(client, ":server 421 :Uknown command");
 		return true;
 	}
 	return (this->*(it->second))(server, client, msg);
@@ -107,5 +109,91 @@ bool	CommandHandler::nick(Server &server, Client &client, const Message &msg)
 	}
 
 	server.registerNickname(client, nick);
+	return true;
 }
+
+bool	CommandHandler::user(Server &server, Client &client, const Message &msg)
+{
+	(void)server;
+
+	std::vector<std::string> p = msg.getParams();
+
+	if(p.size() < 4)
+	{
+		server.sendToClient(client, ":server 461 USER :Not enough params");
+		return true;
+	}
+	client.setUsername(p[0]);
+	std::string realname = p[3];
+
+	if (!realname.empty() && realname[0] == ':')
+		realname.erase(0, 1);
+	client.setRealname(realname);
+	return true;
+}
+
+bool	CommandHandler::ping(Server &server, Client &client, const Message &msg)
+{
+	if (msg.getParams().empty())
+		return true;
+	server.sendToClient(client, "PONG :" + msg.getParams()[0]);
+	return true;
+}
+
+bool	CommandHandler::quit(Server &server, Client &client, const Message &msg)
+{
+	(void)server;
+	(void)client;
+	(void)msg;
+	return false;
+}
+
+bool CommandHandler::cap(Server &server, Client &client, const Message &msg)
+{
+    (void)server; (void)client; (void)msg;
+    return (false); // TODO
+}
+
+bool CommandHandler::pong(Server &server, Client &client, const Message &msg)
+{
+    (void)server; (void)client; (void)msg;
+    return (false); // TODO
+}
+
+bool CommandHandler::join(Server &server, Client &client, const Message &msg)
+{
+    (void)server; (void)client; (void)msg;
+    return (false); // TODO
+}
+
+bool CommandHandler::privmsg(Server &server, Client &client, const Message &msg)
+{
+    (void)server; (void)client; (void)msg;
+    return (false); // TODO
+}
+
+bool CommandHandler::mode(Server &server, Client &client, const Message &msg)
+{
+    (void)server; (void)client; (void)msg;
+    return (false); // TODO
+}
+
+bool CommandHandler::topic(Server &server, Client &client, const Message &msg)
+{
+    (void)server; (void)client; (void)msg;
+    return (false); // TODO
+}
+
+bool CommandHandler::invite(Server &server, Client &client, const Message &msg)
+{
+    (void)server; (void)client; (void)msg;
+    return (false); // TODO
+}
+
+bool CommandHandler::kick(Server &server, Client &client, const Message &msg)
+{
+    (void)server; (void)client; (void)msg;
+    return (false); // TODO
+}
+
 
