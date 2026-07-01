@@ -6,11 +6,12 @@
 /*   By: mely-pan <mely-pan@student.42lisboa.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/18 16:55:39 by mely-pan          #+#    #+#             */
-/*   Updated: 2026/06/24 18:17:50 by mely-pan         ###   ########.fr       */
+/*   Updated: 2026/07/01 17:40:27 by mely-pan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <CommandHandler.h>
+#include <Reply.h>
 
 CommandHandler::CommandHandler()
 {
@@ -60,14 +61,14 @@ bool	CommandHandler::dispatch(const std::string &cmd, Server &server, Client &cl
 {
 	if (requiresAuth(cmd) && !client.isRegistered())
 	{
-		server.sendToClient(client, ":server 451 :You have not registered");
+		server.sendToClient(client, ERR_NOTREGISTERED(client.getNickname()));
 		return true;
 	}
 	std::map<std::string, CommandFt>::iterator it = _handlers.find(cmd);
 
 	if (it == _handlers.end())
 	{
-		server.sendToClient(client, ":server 421 :Uknown command");
+		server.sendToClient(client, ERR_UNKNOWNCOMMAND(client.getNickname(), msg.getCommand()));
 		return true;
 	}
 	return (this->*(it->second))(server, client, msg);
@@ -79,15 +80,19 @@ bool	CommandHandler::pass(Server &server, Client &client, const Message &msg)
 		return true;
 	if (msg.getParams().empty())
 	{
-		server.sendToClient(client, ":server 461 :Not enough parameters");
+		server.sendToClient(client, ERR_NEEDMOREPARAMS(client.getNickname(), msg.getCommand()));
+		return true;
+	}
+	if (client.isRegistered())
+	{
+		server.sendToClient(client, ERR_ALREADYREGISTERED(client.getNickname()));
 		return true;
 	}
 	if (msg.getParams()[0] != server.getPassword())
 	{
-		server.sendToClient(client, ":server 464 :Password incorrect");
+		server.sendToClient(client, ERR_PASSWDMISMATCH(client.getNickname()));
 		return true;
 	}
-
 	client.setPassAccepted(true);
 	return (true);
 }
@@ -96,7 +101,7 @@ bool	CommandHandler::nick(Server &server, Client &client, const Message &msg)
 {
 	if (msg.getParams().empty())
 	{
-		server.sendToClient(client, ":server 461 :Not enough parameters");
+		server.sendToClient(client, ERR_NONICKNAMEGIVEN(client.getNickname()));
 		return true;
 	}
 	
@@ -104,11 +109,17 @@ bool	CommandHandler::nick(Server &server, Client &client, const Message &msg)
 	
 	if(!server.isNicknameAvailable(nick))
 	{
-		server.sendToClient(client, ":server 433 :Nickname is already in use");
+		server.sendToClient(client, ERR_NICKNAMEINUSE(client.getNickname(), nick));
 		return true;
 	}
-
+	if (!nickValid(nick))
+	{
+		server.sendToClient(client, ERR_ERRONEUSNICKNAME(client.getNickname(), nick));
+		return true;
+	}
+	// broadcast("<oldnick>!user@host NICK <nick>"); 
 	server.registerNickname(client, nick);
+	tryRegistration(server, client);
 	return true;
 }
 
@@ -120,7 +131,7 @@ bool	CommandHandler::user(Server &server, Client &client, const Message &msg)
 
 	if(p.size() < 4)
 	{
-		server.sendToClient(client, ":server 461 USER :Not enough params");
+		server.sendToClient(client, ERR_NEEDMOREPARAMS(client.getNickname(), msg.getCommand()));
 		return true;
 	}
 	client.setUsername(p[0]);
@@ -129,6 +140,7 @@ bool	CommandHandler::user(Server &server, Client &client, const Message &msg)
 	if (!realname.empty() && realname[0] == ':')
 		realname.erase(0, 1);
 	client.setRealname(realname);
+	tryRegistration(server, client);
 	return true;
 }
 
@@ -136,7 +148,7 @@ bool	CommandHandler::ping(Server &server, Client &client, const Message &msg)
 {
 	if (msg.getParams().empty())
 		return true;
-	server.sendToClient(client, "PONG :" + msg.getParams()[0]);
+	server.sendToClient(client, RPL_PONG(msg.getParams()[0]));
 	return true;
 }
 

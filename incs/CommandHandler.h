@@ -6,7 +6,7 @@
 /*   By: mely-pan <mely-pan@student.42lisboa.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/18 21:17:45 by mely-pan          #+#    #+#             */
-/*   Updated: 2026/06/24 16:41:31 by mely-pan         ###   ########.fr       */
+/*   Updated: 2026/07/01 17:05:56 by mely-pan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,7 +41,11 @@ class CommandHandler
 		bool	mode(Server &server, Client &client, const Message &msg);	
 		bool	topic(Server &server, Client &client, const Message &msg);	
 		bool	invite(Server &server, Client &client, const Message &msg);	
-		bool	kick(Server &server, Client &client, const Message &msg);	
+		bool	kick(Server &server, Client &client, const Message &msg);
+		
+		//utils
+		bool	nickValid(const std::string &nick);
+		void	tryRegistration(Server &server, Client &client);
 	public:
 		CommandHandler();
 		~CommandHandler();
