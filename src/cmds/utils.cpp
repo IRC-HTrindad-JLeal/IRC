@@ -35,8 +35,8 @@ bool	CommandHandler::nickValid(const std::string &nick)
 
 void	CommandHandler::tryRegistration(Server &server, Client &client)
 {
-	if (!client.isRegistered())
-		return ;
+	if (!client.tryMarkRegistered())
+		return;
 	
 	server.sendToClient(client, RPL_WELCOME(client.getNickname(), client.getUsername(), client.getIp()));
 	server.sendToClient(client, RPL_YOURHOST(client.getNickname()));
