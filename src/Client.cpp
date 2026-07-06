@@ -39,26 +39,40 @@ const std::string &Client::getRealName() const { return realname; }
 bool Client::isPassAccepted() const { return passAccepted; }
 bool Client::isRegistered() const { return registered; }
 
-void Client::setNick(const std::string &nickname) {
+void Client::setNick(const std::string &nickname)
+{
 	this->nickname = nickname;
-	updateRegistration();
+	hasNickname = !nickname.empty();
 }
 
-void Client::setUsername(const std::string &username) {
+void Client::setUsername(const std::string &username)
+{
 	this->username = username;
-	updateRegistration();
+	hasUsername = !username.empty();
 }
 
-void Client::setRealname(const std::string &realname) {
+void Client::setRealname(const std::string &realname)
+{
 	this->realname = realname;
-	updateRegistration();
 }
 
-void Client::setPassAccepted(bool value) {
+void Client::setPassAccepted(bool value)
+{
 	this->passAccepted = value;
 }
 
-bool Client::appendToReadBuffer(const std::string &data) {
+bool Client::tryMarkRegistered()
+{
+	if (registered)
+		return false;
+	if (!passAccepted || !hasNickname || !hasUsername)
+		return false;
+	registered = true;
+	return true;
+}
+
+bool Client::appendToReadBuffer(const std::string &data)
+{
 	if (data.empty())
 		return (true);
 	this->readBuffer += data;
@@ -77,11 +91,13 @@ bool Client::appendToReadBuffer(const std::string &data) {
 	return (true);
 }
 
-bool Client::hasCompleteLine() const {
+bool Client::hasCompleteLine() const
+{
 	return (this->readBuffer.find('\n') != std::string::npos);
 }
 
-std::string Client::popLine() {
+std::string Client::popLine()
+{
 	std::string::size_type end;
 	std::string::size_type lineEnd;
 	std::string line;
@@ -102,7 +118,8 @@ std::string Client::popLine() {
 	return (line);
 }
 
-bool Client::queueMessage(const std::string &message) {
+bool Client::queueMessage(const std::string &message)
+{
 	if (message.empty())
 		return (true);
 	if (message.size() > MAX_QUEUED_BYTES)
@@ -138,8 +155,8 @@ bool		Client::hasPendingOutput() const	{ return (!sendQueue.empty()); }
 
 std::string	&Client::frontOutput()				{ return (sendQueue.front()); }
 
-void	Client::updateRegistration() {
+void	Client::updateRegistration()
+{
 	hasNickname = !nickname.empty();
 	hasUsername = !username.empty();
-	registered = (passAccepted && hasNickname && hasUsername);
 }

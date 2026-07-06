@@ -76,24 +76,25 @@ bool	CommandHandler::dispatch(const std::string &cmd, Server &server, Client &cl
 
 bool	CommandHandler::pass(Server &server, Client &client, const Message &msg)
 {
-	if (client.isPassAccepted())
-		return true;
-	if (msg.getParams().empty())
-	{
-		server.sendToClient(client, ERR_NEEDMOREPARAMS(client.getNickname(), msg.getCommand()));
-		return true;
-	}
 	if (client.isRegistered())
 	{
 		server.sendToClient(client, ERR_ALREADYREGISTERED(client.getNickname()));
 		return true;
 	}
-	if (msg.getParams()[0] != server.getPassword())
+	if (msg.getParams().empty())
+	{
+		server.sendToClient(client, ERR_NEEDMOREPARAMS(client.getNickname(), msg.getCommand()));
+		return true;
+	}
+	if (client.isPassAccepted())
+		return true;
+	if (msg.getMiddle() != server.getPassword())
 	{
 		server.sendToClient(client, ERR_PASSWDMISMATCH(client.getNickname()));
 		return true;
 	}
 	client.setPassAccepted(true);
+	tryRegistration(server, client);
 	return (true);
 }
 
@@ -105,7 +106,8 @@ bool	CommandHandler::nick(Server &server, Client &client, const Message &msg)
 		return true;
 	}
 	
-	const std::string &nick = msg.getParams()[0];
+	// TODO: change this variable back into a reference once the Message getters are updated.
+	const std::string nick = msg.getMiddle();
 	
 	if(!server.isNicknameAvailable(nick))
 	{
@@ -126,6 +128,12 @@ bool	CommandHandler::nick(Server &server, Client &client, const Message &msg)
 bool	CommandHandler::user(Server &server, Client &client, const Message &msg)
 {
 	(void)server;
+
+	if (client.isRegistered())
+	{
+		server.sendToClient(client, ERR_ALREADYREGISTERED(client.getNickname()));
+		return true;
+	}
 
 	std::vector<std::string> p = msg.getParams();
 
@@ -148,7 +156,7 @@ bool	CommandHandler::ping(Server &server, Client &client, const Message &msg)
 {
 	if (msg.getParams().empty())
 		return true;
-	server.sendToClient(client, RPL_PONG(msg.getParams()[0]));
+	server.sendToClient(client, RPL_PONG(msg.getMiddle()));
 	return true;
 }
 
@@ -160,52 +168,75 @@ bool	CommandHandler::quit(Server &server, Client &client, const Message &msg)
 	return false;
 }
 
+// TODO
+// Implemented minial cap for testing, needs review
 bool CommandHandler::cap(Server &server, Client &client, const Message &msg)
 {
-    (void)server; (void)client; (void)msg;
-    return (false); // TODO
+	std::vector<std::string> params = msg.getParams();
+	std::string nick = client.getNickname();
+
+	if (nick.empty())
+		nick = "*";
+	if (params.empty())
+		return (true);
+	if (params[0] == "LS")
+	{
+		server.sendToClient(client, RPL_CAP_LS(nick));
+		return (true);
+	}
+	if (params[0] == "REQ")
+	{
+		if (params.size() > 1)
+			server.sendToClient(client, RPL_CAP_NAK(nick, params[1]));
+		else
+			server.sendToClient(client, RPL_CAP_NAK(nick, ""));
+		return (true);
+	}
+	if (params[0] == "END")
+		return (true);
+    return (true);
 }
 
 bool CommandHandler::pong(Server &server, Client &client, const Message &msg)
 {
     (void)server; (void)client; (void)msg;
-    return (false); // TODO
+    return (true); // TODO
 }
 
 bool CommandHandler::join(Server &server, Client &client, const Message &msg)
 {
     (void)server; (void)client; (void)msg;
-    return (false); // TODO
+    return (true); // TODO
 }
 
 bool CommandHandler::privmsg(Server &server, Client &client, const Message &msg)
 {
     (void)server; (void)client; (void)msg;
-    return (false); // TODO
+    return (true); // TODO
 }
 
 bool CommandHandler::mode(Server &server, Client &client, const Message &msg)
 {
     (void)server; (void)client; (void)msg;
-    return (false); // TODO
+    return (true); // TODO
 }
 
 bool CommandHandler::topic(Server &server, Client &client, const Message &msg)
 {
     (void)server; (void)client; (void)msg;
-    return (false); // TODO
+    return (true); // TODO
 }
 
 bool CommandHandler::invite(Server &server, Client &client, const Message &msg)
 {
     (void)server; (void)client; (void)msg;
-    return (false); // TODO
+    return (true); // TODO
 }
 
 bool CommandHandler::kick(Server &server, Client &client, const Message &msg)
 {
     (void)server; (void)client; (void)msg;
-    return (false); // TODO
+    return (true); // TODO
 }
 
 

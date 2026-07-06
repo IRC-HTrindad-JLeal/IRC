@@ -69,5 +69,6 @@ class Client
 		void		consumeOutput(size_t bytes);
 
 		void	updateRegistration();
+		bool	tryMarkRegistered();
 };
 
