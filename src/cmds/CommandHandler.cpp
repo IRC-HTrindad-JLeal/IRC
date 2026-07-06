@@ -88,7 +88,7 @@ bool	CommandHandler::pass(Server &server, Client &client, const Message &msg)
 	}
 	if (client.isPassAccepted())
 		return true;
-	if (msg.getParams()[0] != server.getPassword())
+	if (msg.getMiddle() != server.getPassword())
 	{
 		server.sendToClient(client, ERR_PASSWDMISMATCH(client.getNickname()));
 		return true;
@@ -107,8 +107,7 @@ bool	CommandHandler::nick(Server &server, Client &client, const Message &msg)
 	}
 	
 	// TODO: change this variable back into a reference once the Message getters are updated.
-	//const std::string &nick = msg.getParams()[0];
-	const std::string nick = msg.getParams()[0];
+	const std::string nick = msg.getMiddle();
 	
 	if(!server.isNicknameAvailable(nick))
 	{
@@ -157,7 +156,7 @@ bool	CommandHandler::ping(Server &server, Client &client, const Message &msg)
 {
 	if (msg.getParams().empty())
 		return true;
-	server.sendToClient(client, RPL_PONG(msg.getParams()[0]));
+	server.sendToClient(client, RPL_PONG(msg.getMiddle()));
 	return true;
 }
 
