@@ -6,7 +6,7 @@
 /*   By: mely-pan <mely-pan@student.42lisboa.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/18 16:55:39 by mely-pan          #+#    #+#             */
-/*   Updated: 2026/07/01 17:40:27 by mely-pan         ###   ########.fr       */
+/*   Updated: 2026/07/06 18:02:22 by mely-pan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -127,8 +127,6 @@ bool	CommandHandler::nick(Server &server, Client &client, const Message &msg)
 
 bool	CommandHandler::user(Server &server, Client &client, const Message &msg)
 {
-	(void)server;
-
 	if (client.isRegistered())
 	{
 		server.sendToClient(client, ERR_ALREADYREGISTERED(client.getNickname()));
