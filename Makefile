@@ -2,7 +2,7 @@ NAME		= ircserv
 CPP		= c++
 CPPFLAGS	= -Wall -Werror -Wextra -O3 -std=c++98 -I./incs/
 SP		= src
-SRC		= $(SP)/main.cpp $(SP)/Server.cpp $(SP)/Client.cpp $(SP)/Channel.cpp $(SP)/parsing/Message.cpp
+SRC		= $(SP)/main.cpp $(SP)/Server.cpp $(SP)/Client.cpp $(SP)/Channel.cpp $(SP)/parsing/Message.cpp $(SP)/cmds/utils.cpp $(SP)/cmds/CommandHandler.cpp
 OBJ		= $(SRC:$(SP)/%.cpp=$(OP)/%.o)
 OP		= obj
 

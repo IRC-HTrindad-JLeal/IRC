@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Message.h                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: htrindad <htrindad@student.42lisboa.com>   +#+  +:+       +#+        */
+/*   By: mely-pan <mely-pan@student.42lisboa.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/08 17:58:06 by htrindad          #+#    #+#             */
-/*   Updated: 2026/06/10 18:51:05 by htrindad         ###   ########.fr       */
+/*   Updated: 2026/06/19 18:29:08 by mely-pan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,7 +39,7 @@ class Message
 		std::string			getMessage() const;
 		std::string			getCommand() const;
 		std::vector<std::string>	getParams() const;
-		std::string			getMiddle() const;
+		std::string			getMiddle() const; // target
 		std::string			getTrailing() const;
 		void				setMessage(const std::string &msg);
 		void				setCommand(const std::string &cmd);

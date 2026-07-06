@@ -3,14 +3,15 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: htrindad <htrindad@student.42lisboa.com>   +#+  +:+       +#+        */
+/*   By: mely-pan <mely-pan@student.42lisboa.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/07 02:43:38 by htrindad          #+#    #+#             */
-/*   Updated: 2026/06/14 23:18:07 by jordanleal       ###   ########.fr       */
+/*   Updated: 2026/06/24 18:53:34 by mely-pan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <Server.h>
+#include <CommandHandler.h>
 #include <Message.h>
 #include <master.h>
 
@@ -18,6 +19,7 @@ volatile sig_atomic_t Server::sig = 1;
 
 Server::Server()
 {
+	_commandHandler = NULL;
 	validCmds.push_back("PASS");
 	validCmds.push_back("QUIT");
 	validCmds.push_back("PING");
@@ -36,6 +38,7 @@ Server::Server()
 
 Server::~Server()
 {
+	delete _commandHandler;
 	validCmds.clear();
 	clearClients();
 	closeFds();
@@ -218,6 +221,7 @@ void		Server::serverInit(int port, const std::string &password)
 		throw std::runtime_error("Password cannot be empty");
 	this->port = port;
 	this->password = password;
+	_commandHandler = new CommandHandler();
 	sockIt();
 	std::cout << GRE << serverSocket << "> Connection succesfull" << WHI << '\n';
 	serverThread();
@@ -293,44 +297,7 @@ bool Server::retrieveData(int fd)
 
 bool		Server::dispatchMessage(Client &client, const Message &msg)
 {
-	std::string cmd = msg.getCommand();
-
-	if (cmd.empty())
-		return (true);
-
-	if (cmd == "QUIT")
-		return (false);
-
-	if (cmd == "PASS")
-	{
-		// handlePass()
-		return (true);
-	}
-	if (cmd == "NICK")
-	{
-		// handleNick()
-		return (true);
-	}
-	if (cmd == "USER")
-	{
-		// handleUser()
-		return (true);
-	}
-	if (cmd == "PING")
-	{
-		// handlePing()
-		return (true);
-	}
-
-	if (!client.isRegistered())
-	{
-		//send numeric ERR_NOTREGISTERED;
-		return (true);
-	}
-
-	// commands requring client registration
-
-	return (true);
+	return (this->_commandHandler->execute(*this, client, msg));
 }
 
 bool		Server::sendToClient(Client &client, const std::string &reply)
