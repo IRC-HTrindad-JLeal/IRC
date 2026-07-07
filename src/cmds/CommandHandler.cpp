@@ -209,8 +209,50 @@ bool CommandHandler::join(Server &server, Client &client, const Message &msg)
 
 bool CommandHandler::privmsg(Server &server, Client &client, const Message &msg)
 {
-    (void)server; (void)client; (void)msg;
-    return (true); // TODO
+	//:nick!user@host PRIVMSG target :message
+	std::string target = msg.getMiddle();
+	std::string text = msg.getTrailing();
+	
+	if (target.empty())
+	{
+		server.sendToClient(client, ERR_NORECIPIENT(client.getNickname(), "PRIVMSG"));
+		return true;
+	}
+	else if (text.empty())
+	{
+		server.sendToClient(client, ERR_NOTEXTTOSEND(client.getNickname()));
+		return true;
+	}
+
+	std::string reply = RPL_PRIVMSG(client.getNickname(), client.getUsername(), client.getIp(), target, text);
+
+	if (target[0] == '#')
+	{
+		Channel *targetChannel = server.findChannel(target);
+		if (!targetChannel)
+		{
+			server.sendToClient(client, ERR_NOSUCHCHANNEL(client.getNickname(), target));
+			return true;
+		}
+		if (!targetChannel->hasMember(client.getFd()))
+		{
+			server.sendToClient(client, ERR_CANNOTSENDTOCHAN(client.getNickname(), target));
+		}
+		server.broadcastToChannel(*targetChannel, reply, client.getFd());
+	}
+	else
+	{
+		Client *targetNick = server.findClientByNickname(target);
+
+		if (!targetNick) {
+			server.sendToClient(client, ERR_NOSUCHNICK(client.getNickname(), target));
+			return true;
+		}
+
+		server.sendToClient(*targetNick, reply);
+	}
+
+	return (true); // TODO
 }
 
 bool CommandHandler::mode(Server &server, Client &client, const Message &msg)

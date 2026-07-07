@@ -75,8 +75,8 @@
 	(":" SRV " 366 " + (nick) + " " + (channel) + " :End of /NAMES list")
 
 // PRIVMSG
-#define RPL_PRIVMSG(prefix, target, msg) \
-	((prefix) + " PRIVMSG " + (target) + " :" + (msg))
+#define RPL_PRIVMSG(nick, user, host, target, msg) \
+	(':' + (nick) + '!' + (user) + '@' + host + " PRIVMSG " + (target) + " " + (msg))
 
 // TOPIC change (broadcast)
 #define RPL_TOPIC_CHANGE(prefix, channel, topic) \
