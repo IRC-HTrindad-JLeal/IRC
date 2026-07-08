@@ -6,7 +6,7 @@
 /*   By: mely-pan <mely-pan@student.42lisboa.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/06 22:53:42 by htrindad          #+#    #+#             */
-/*   Updated: 2026/06/24 18:13:27 by mely-pan         ###   ########.fr       */
+/*   Updated: 2026/07/08 21:35:16 by mely-pan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,6 +34,7 @@ class Server
 		std::vector<struct pollfd>	fds;
 		std::vector<std::string>	validCmds;
 		std::string					password;
+		std::string					creationDate;
 		CommandHandler				*_commandHandler;
 
 		void	disconnectClient(int fd);
@@ -55,6 +56,7 @@ class Server
 		void				closeFds();
 		void				clearClients();
 		const std::string	&getPassword() const;
+		const std::string	&getCreationDate() const;
 		bool				sendToClient(Client &client, const std::string &reply);
 
 		Client	*findClientByFd(int fd);

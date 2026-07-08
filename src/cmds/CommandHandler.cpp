@@ -6,7 +6,7 @@
 /*   By: mely-pan <mely-pan@student.42lisboa.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/18 16:55:39 by mely-pan          #+#    #+#             */
-/*   Updated: 2026/07/06 18:02:22 by mely-pan         ###   ########.fr       */
+/*   Updated: 2026/07/08 22:15:57 by mely-pan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -94,12 +94,16 @@ bool	CommandHandler::pass(Server &server, Client &client, const Message &msg)
 		return true;
 	}
 	client.setPassAccepted(true);
-	tryRegistration(server, client);
 	return (true);
 }
 
 bool	CommandHandler::nick(Server &server, Client &client, const Message &msg)
 {
+	if (!client.isPassAccepted())
+    {
+        server.sendToClient(client, ERR_NOTREGISTERED(client.getNickname()));
+        return true;
+    }
 	if (msg.getParams().empty())
 	{
 		server.sendToClient(client, ERR_NONICKNAMEGIVEN(client.getNickname()));
@@ -107,7 +111,7 @@ bool	CommandHandler::nick(Server &server, Client &client, const Message &msg)
 	}
 	
 	// TODO: change this variable back into a reference once the Message getters are updated.
-	const std::string nick = msg.getMiddle();
+	const std::string &nick = msg.getMiddle();
 	
 	if(!server.isNicknameAvailable(nick))
 	{
@@ -119,7 +123,12 @@ bool	CommandHandler::nick(Server &server, Client &client, const Message &msg)
 		server.sendToClient(client, ERR_ERRONEUSNICKNAME(client.getNickname(), nick));
 		return true;
 	}
-	// broadcast("<oldnick>!user@host NICK <nick>"); 
+	if (client.isRegistered())
+	{
+		std::string	prefix = USRPREFIX(client);
+		//broadtcast to all channels client is in
+		// (to implement after channels are working)
+	}
 	server.registerNickname(client, nick);
 	tryRegistration(server, client);
 	return true;
@@ -127,6 +136,11 @@ bool	CommandHandler::nick(Server &server, Client &client, const Message &msg)
 
 bool	CommandHandler::user(Server &server, Client &client, const Message &msg)
 {
+	if (!client.isPassAccepted())
+	{
+		server.sendToClient(client, ERR_NOTREGISTERED(client.getNickname()));
+		return true;
+	}
 	if (client.isRegistered())
 	{
 		server.sendToClient(client, ERR_ALREADYREGISTERED(client.getNickname()));
