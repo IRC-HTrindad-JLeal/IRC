@@ -6,7 +6,7 @@
 /*   By: mely-pan <mely-pan@student.42lisboa.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/18 16:55:39 by mely-pan          #+#    #+#             */
-/*   Updated: 2026/07/08 22:15:57 by mely-pan         ###   ########.fr       */
+/*   Updated: 2026/07/08 22:23:17 by mely-pan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -167,7 +167,10 @@ bool	CommandHandler::user(Server &server, Client &client, const Message &msg)
 bool	CommandHandler::ping(Server &server, Client &client, const Message &msg)
 {
 	if (msg.getParams().empty())
+	{
+		server.sendToClient(client, ERR_NEEDMOREPARAMS(client.getNickname(), "PING"));
 		return true;
+	}
 	server.sendToClient(client, RPL_PONG(msg.getMiddle()));
 	return true;
 }
