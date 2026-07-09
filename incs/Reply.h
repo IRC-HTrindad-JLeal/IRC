@@ -76,7 +76,7 @@
 
 // PRIVMSG
 #define RPL_PRIVMSG(prefix, target, msg) \
-	(':' + (prefix) + " PRIVMSG " + (target) + " " + (msg))
+	((prefix) + " PRIVMSG " + (target) + " :" + (msg))
 
 // TOPIC change (broadcast)
 #define RPL_TOPIC_CHANGE(prefix, channel, topic) \
