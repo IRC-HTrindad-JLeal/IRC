@@ -1,4 +1,11 @@
 CompileFlags:
-  Add: [-I../incs/, -I../../incs/, -Wall, -Werror, -Wextra]
+  Add:
+    - -I/home/jordanleal/42/Projects/IRC/incs
+    - -Wall
+    - -Werror
+    - -Wextra
+    - -std=c++98
+Diagnostics:
+  UnusedIncludes: None
 Completion:
   HeaderInsertion: Never
