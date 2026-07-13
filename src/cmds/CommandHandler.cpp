@@ -369,6 +369,7 @@ bool CommandHandler::privmsg(Server &server, Client &client, const Message &msg)
 		if (!targetChannel->hasMember(client.getFd()))
 		{
 			server.sendToClient(client, ERR_CANNOTSENDTOCHAN(client.getNickname(), target));
+			return true;
 		}
 		server.broadcastToChannel(*targetChannel, reply, client.getFd());
 	}
