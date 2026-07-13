@@ -501,7 +501,7 @@ bool	Server::broadcastToClientChannels(const Client &client, const std::string &
 	for (std::set<int>::iterator it = recipients.begin(); it != recipients.end(); ++it)
 	{
 		Client *target = findClientByFd(*it);
-		if (!target && !sendToClient(*target, message))
+		if (!target || !sendToClient(*target, message))
 			ok = false;
 	}
 	return (ok);
