@@ -43,3 +43,18 @@ void	CommandHandler::tryRegistration(Server &server, Client &client)
 	server.sendToClient(client, RPL_CREATED(client.getNickname(), "123")); // ! add get_date function instead of "123" 
 	server.sendToClient(client, RPL_MYINFO(client.getNickname()));
 }
+
+std::vector<std::string> CommandHandler::split(const std::string &str, char delimiter)
+{
+	std::vector<std::string> result;
+	std::string item;
+	std::stringstream ss(str);
+
+	while (std::getline(ss, item, delimiter))
+		result.push_back(item);
+
+	if (!str.empty() && str[str.length() - 1] == delimiter)
+		result.push_back("");
+
+	return result;
+}

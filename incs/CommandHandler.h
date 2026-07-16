@@ -46,6 +46,7 @@ class CommandHandler
 		//utils
 		bool	nickValid(const std::string &nick);
 		void	tryRegistration(Server &server, Client &client);
+		std::vector<std::string> split(const std::string &str, char delimiter);
 	public:
 		CommandHandler();
 		~CommandHandler();
