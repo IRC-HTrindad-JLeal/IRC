@@ -6,7 +6,7 @@
 /*   By: mely-pan <mely-pan@student.42lisboa.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/18 16:55:39 by mely-pan          #+#    #+#             */
-/*   Updated: 2026/07/18 19:59:04 by mely-pan         ###   ########.fr       */
+/*   Updated: 2026/07/18 20:05:42 by mely-pan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -121,6 +121,11 @@ bool	CommandHandler::nick(Server &server, Client &client, const Message &msg)
 	if (!nickValid(nick))
 	{
 		server.sendToClient(client, ERR_ERRONEUSNICKNAME(nickOrStar(client), nick));
+		return true;
+	}
+	if (nick.size() > 9)
+	{
+		server.sendToClient(client, ERR_NICKTOOLONG(nickOrStar(client), nick));
 		return true;
 	}
 	if (client.isRegistered())
