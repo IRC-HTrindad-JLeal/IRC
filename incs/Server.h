@@ -68,5 +68,8 @@ class Server
 		Channel	*findChannel(const std::string &name);
 		Channel	&getOrCreateChannel(const std::string &name);
 		void	removeClientFromChannels(int fd);
+
 		bool	broadcastToChannel(const Channel &channel, const std::string &message, int exceptFd);
+		bool	broadcastToClientChannels(const Client &client, const std::string &message, int exceptFd);
+		bool	broadcastAllRegistered(const std::string &message, int exceptFd);
 };

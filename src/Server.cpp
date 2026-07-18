@@ -489,6 +489,46 @@ bool	Server::broadcastToChannel(const Channel &channel, const std::string &messa
 	return ok;
 }
 
+bool	Server::broadcastToClientChannels(const Client &client, const std::string &message, int exceptFd)
+{
+	std::set<int>	recipients;
+	bool			ok = true;
+	int				cFd = client.getFd();
+
+	for(std::map<std::string, Channel>::const_iterator it = channels.begin(); it != channels.end(); ++it)
+	{
+		if (!it->second.hasMember(cFd))
+			continue;
+		const std::map<int, bool> &members = it->second.getMembers();
+		for (std::map<int, bool>::const_iterator m = members.begin(); m != members.end(); ++m)
+		{
+			if (m->first != exceptFd)
+				recipients.insert(m->first);
+		}
+	}
+
+	for (std::set<int>::iterator it = recipients.begin(); it != recipients.end(); ++it)
+	{
+		Client *target = findClientByFd(*it);
+		if (!target || !sendToClient(*target, message))
+			ok = false;
+	}
+	return (ok);
+}
+
+bool	Server::broadcastAllRegistered(const std::string &message, int exceptFd) 
+{
+	bool ok = true;
+
+	for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); ++it)
+	{
+		if (it->second.isRegistered() && it->first != exceptFd)
+			if (!sendToClient(it->second, message))
+				ok = false;
+	}
+	return ok;
+}
+
 bool	Server::isNicknameAvailable(const std::string &nick) const
 {
 	return (nicknames.find(nick) == nicknames.end());

@@ -51,3 +51,18 @@ const std::string nickOrStar(const Client &client)
         return "*";
     return nick;
 }
+
+std::vector<std::string> CommandHandler::split(const std::string &str, char delimiter)
+{
+	std::vector<std::string> result;
+	std::string item;
+	std::stringstream ss(str);
+
+	while (std::getline(ss, item, delimiter))
+		result.push_back(item);
+
+	if (!str.empty() && str[str.length() - 1] == delimiter)
+		result.push_back("");
+
+	return result;
+}

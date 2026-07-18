@@ -223,16 +223,187 @@ bool CommandHandler::pong(Server &server, Client &client, const Message &msg)
     return (true); // TODO
 }
 
+static bool   isJoinChannelName(const std::string &name)
+{
+	if (name.empty())
+		return false;
+	if (name[0] != '#')
+		return false;
+	if (name.length() == 1)
+		return false;
+	if (name.length() > 50)
+		return false;
+	if (name.find(' ') != std::string::npos)
+		return false;
+	if (name.find('\a') != std::string::npos)
+		return false;
+	return true;
+}
+
+static void welcomeMsg(Server &server, Client &client, Channel &channel)
+{
+	std::string			prefix = RPL_NAMREPLY(client.getNickname(), channel.getName(), "");
+
+	if (prefix.size() + 2 > LINE_LEN_BUF_MAX)
+	{
+		server.sendToClient(client, RPL_ENDOFNAMES(client.getNickname(), channel.getName()));
+		return;
+	}
+
+	const std::map<int, bool>	&membMap = channel.getMembers();
+	size_t						maxPayload = LINE_LEN_BUF_MAX - prefix.size() - 2;
+	std::string 				line = "";
+
+	for (std::map<int, bool>::const_iterator it = membMap.begin(); it != membMap.end(); ++it)
+	{
+		Client * member = server.findClientByFd(it->first);
+		std::string name = "";
+		if (member)
+		{
+			if (it->second)
+				name += "@";
+			name += member->getNickname();
+		}
+		else
+		{
+			// TODO
+			// handle very unlikely edge case where a client exists in a channel but is not registered on the server.
+			continue;
+		}
+
+		std::string next = line.empty() ? name : line + " " + name;
+		if (next.size() > maxPayload && !line.empty())
+		{
+			server.sendToClient(client, prefix + line);
+			line = name;
+		}
+		else 
+			line = next;
+	}
+	server.sendToClient(client, prefix + line);
+	server.sendToClient(client, RPL_ENDOFNAMES(client.getNickname(), channel.getName()));
+}
+
 bool CommandHandler::join(Server &server, Client &client, const Message &msg)
 {
-    (void)server; (void)client; (void)msg;
-    return (true); // TODO
+	std::vector<std::string> params = msg.getParams();
+
+	if (params.empty())
+	{
+		server.sendToClient(client, ERR_NEEDMOREPARAMS(client.getNickname(), "JOIN"));
+		return true;
+	}
+
+	std::vector<std::string> channels = split(params[0], ',');
+	std::vector<std::string> keys;
+
+	if (params.size() == 2)
+		keys = split(params[1], ',');
+
+	for (size_t i = 0; i < channels.size(); ++i)
+	{
+		std::string target = channels[i];
+		if (!isJoinChannelName(target))
+		{
+			server.sendToClient(client, ERR_NOSUCHCHANNEL(client.getNickname(), target));
+			continue;
+		}
+		Channel &channel = server.getOrCreateChannel(target);
+		bool firstUser = channel.empty();
+
+		if (channel.hasMember(client.getFd()))
+			continue;
+
+		if (channel.isFull())
+		{
+			server.sendToClient(client, ERR_CHANNELISFULL(client.getNickname(), target));
+			continue;
+		}
+		if (channel.isInviteOnly())
+		{
+			if (!channel.isInvited(client.getFd()))
+			{
+				server.sendToClient(client, ERR_INVITEONLYCHAN(client.getNickname(), target));
+				continue;
+			}
+		}
+		if (channel.hasKey())
+		{
+			if (i >= keys.size() || keys[i] != channel.getKey())
+			{
+				server.sendToClient(client, ERR_BADCHANNELKEY(client.getNickname(), target));
+				continue;
+			}
+		}
+
+		if (channel.addMember(client.getFd(), firstUser))
+			server.broadcastToChannel(channel, RPL_JOIN(USRPREFIX(client), target), -1);
+		else
+		{
+			// TODO
+			// handle case where addMember fails
+			return (true);
+		}
+
+		if (channel.isInvited(client.getFd()))
+			channel.uninvite(client.getFd());
+
+		if (channel.getTopic().empty())
+			server.sendToClient(client, RPL_NOTOPIC(client.getNickname(), target));
+		else
+			server.sendToClient(client, RPL_TOPIC(client.getNickname(), target, channel.getTopic()));
+		welcomeMsg(server, client, channel);
+	}
+	return (true);
 }
 
 bool CommandHandler::privmsg(Server &server, Client &client, const Message &msg)
 {
-    (void)server; (void)client; (void)msg;
-    return (true); // TODO
+	//:nick!user@host PRIVMSG target :message
+	std::string target = msg.getMiddle();
+	std::string text = msg.getTrailing();
+	
+	if (target.empty())
+	{
+		server.sendToClient(client, ERR_NORECIPIENT(client.getNickname(), "PRIVMSG"));
+		return true;
+	}
+	else if (text.empty())
+	{
+		server.sendToClient(client, ERR_NOTEXTTOSEND(client.getNickname()));
+		return true;
+	}
+
+	std::string reply = RPL_PRIVMSG(USRPREFIX(client), target, text);
+
+	if (target[0] == '#')
+	{
+		Channel *targetChannel = server.findChannel(target);
+		if (!targetChannel)
+		{
+			server.sendToClient(client, ERR_NOSUCHCHANNEL(client.getNickname(), target));
+			return true;
+		}
+		if (!targetChannel->hasMember(client.getFd()))
+		{
+			server.sendToClient(client, ERR_CANNOTSENDTOCHAN(client.getNickname(), target));
+			return true;
+		}
+		server.broadcastToChannel(*targetChannel, reply, client.getFd());
+	}
+	else
+	{
+		Client *targetNick = server.findClientByNickname(target);
+
+		if (!targetNick) {
+			server.sendToClient(client, ERR_NOSUCHNICK(client.getNickname(), target));
+			return true;
+		}
+
+		server.sendToClient(*targetNick, reply);
+	}
+
+	return (true); // TODO
 }
 
 bool CommandHandler::mode(Server &server, Client &client, const Message &msg)

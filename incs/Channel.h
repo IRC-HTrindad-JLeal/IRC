@@ -40,6 +40,7 @@ class Channel
 		size_t	getUserLimit() const;
 		bool	isInviteOnly() const;
 		bool	isTopicOnly() const;
+		bool	hasKey() const;
 
 		void	setName(const std::string &name);
 		void	setTopic(const std::string &topic);
@@ -56,6 +57,7 @@ class Channel
 		bool	addMember(int fd, bool op);
 		void	removeMember(int fd);
 		bool	hasMember(int fd) const;
+
 		bool	isOperator(int fd) const;
 		void	setOperator(int fd, bool value);
 		

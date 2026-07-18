@@ -64,11 +64,10 @@ const std::string	&Channel::getName() const	{ return (name); }
 const std::string	&Channel::getTopic() const	{ return (topic); }
 const std::string	&Channel::getKey() const	{ return (key); }
 
-
 size_t	Channel::getUserLimit() const	{ return (userLimit); }
 bool	Channel::isInviteOnly() const	{ return (inviteOnly); }
 bool	Channel::isTopicOnly() const	{ return (topicOnly); }
-
+bool	Channel::hasKey() const			{ return (!(key == "")); }
 
 void	Channel::setName(const std::string &value) { name = value; }
 void	Channel::setTopic(const std::string &value) { topic = value; }
@@ -78,7 +77,6 @@ void	Channel::setUserLimit(size_t limit) { userLimit = limit; }
 void	Channel::clearUserLimit() { userLimit = 0; }
 void	Channel::setInviteOnly(bool value) { inviteOnly = value; }
 void	Channel::setTopicOnly(bool value) { topicOnly = value; }
-
 
 bool	Channel::addMember(int fd, bool op)
 {

@@ -66,10 +66,10 @@ static void			commandParsing(const std::string &cmd, const std::vector<std::stri
 	}
 	if (cmd == "QUIT")
 		cond = NONTSI;
-	if (cmd == "JOIN" || cmd == "NICK"
+	if (cmd == "NICK"
 		|| cmd == "PASS" || cmd == "PING")
 		cond = SINGLE;
-	if (cmd == "CAP" || cmd == "PING"
+	if (cmd == "JOIN" || cmd == "CAP" || cmd == "PING"
 		||cmd == "PONG")
 		cond = STDBLE;
 	if (cmd == "MODE")
