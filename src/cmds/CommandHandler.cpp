@@ -6,7 +6,7 @@
 /*   By: mely-pan <mely-pan@student.42lisboa.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/18 16:55:39 by mely-pan          #+#    #+#             */
-/*   Updated: 2026/07/06 18:02:22 by mely-pan         ###   ########.fr       */
+/*   Updated: 2026/07/18 19:36:29 by mely-pan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -213,10 +213,184 @@ bool CommandHandler::privmsg(Server &server, Client &client, const Message &msg)
     return (true); // TODO
 }
 
+static std::string	buildModeStr(const Channel &channel)
+{
+	std::string	modes = "+";
+	std::string	params = "";
+
+	if (channel.isInviteOnly())
+		modes += "i";
+	if (channel.isTopicOnly())
+		modes += "t";
+	if (!channel.getKey().empty())
+	{
+		modes += "k";
+		params += " " + channel.getKey();
+	}
+	if (channel.getUserLimit() > 0)
+	{
+		modes += "l";
+		std::ostringstream	oss;
+		oss << channel.getUserLimit();
+		params += " " + oss.str();
+	}
+	if (modes == "+")
+		return "";
+	return modes + params;
+}
+
 bool CommandHandler::mode(Server &server, Client &client, const Message &msg)
 {
-    (void)server; (void)client; (void)msg;
-    return (true); // TODO
+	const std::vector<std::string> params = msg.getParams();
+	
+    if (params.empty())
+	{
+		server.sendToClient(client, ERR_NEEDMOREPARAMS(client.getNickname(), "MODE"));
+		return true;
+	}
+	
+	const std::string &target = msg.getMiddle();
+
+	//user MODE
+	if (target[0] != '#')
+	{
+		if (target != client.getNickname())
+		{
+			server.sendToClient(client, ERR_USERSDONTMATCH(client.getNickname()));
+			return (true);
+		}
+		if (params.size() < 2)
+			server.sendToClient(client, RPL_UMODEIS(client.getNickname(), "+"));
+		return true ;
+	}
+	
+	//Channel MODE
+	Channel	*chan = server.findChannel(target);
+
+	if (!chan)
+	{
+		server.sendToClient(client, ERR_NOSUCHCHANNEL(client.getNickname(), target));
+		return true;
+	}
+	if (!chan->hasMember(client.getFd()))
+	{
+		server.sendToClient(client, ERR_NOTONCHANNEL(client.getNickname(), target));
+		return true;
+	}
+	if (params.size() < 2) //MODE #chan
+	{
+		server.sendToClient(client, RPL_CHANNELMODEIS(client.getNickname(), target, buildModeStr(*chan)));
+		return true;
+	}
+	if (!chan->isOperator(client.getFd()))
+	{
+		server.sendToClient(client, ERR_CHANOPRIVSNEEDED(client.getNickname(), target));
+		return true;
+	}
+	
+	//parsing
+	const std::string	&modestr = params[1];
+	size_t				paramIdx = 2;
+	char				sign = '+';
+	std::string			appliedModes = "";
+	std::string			appliedParams = "";
+	bool				hasSign = false;
+
+	for (size_t i = 0; i < modestr.size(); ++i)
+	{
+		char c = modestr[i];
+
+		if (c == '+' || c == '-')
+		{
+			sign = c;
+			hasSign = true;
+			continue ;
+		}
+		if (!hasSign)
+			continue;
+		if (c == 'i')
+		{
+			chan->setInviteOnly(sign == '+');
+			appliedModes += c;
+		}
+		else if (c == 't')
+		{
+			chan->setTopicOnly(sign == '+');
+			appliedModes += c;
+		}
+		else if (c == 'k')
+		{
+			if (sign == '+')
+			{
+				if (paramIdx >= params.size())
+				{
+					server.sendToClient(client, ERR_NEEDMOREPARAMS(client.getNickname(), "MODE"));
+					continue;
+				}
+				chan->setKey(params[paramIdx]);
+				appliedParams += " " + params[paramIdx];
+				paramIdx++;
+			}
+			else
+				chan->clearKey();
+			appliedModes += c;
+		}
+		else if (c == 'o')
+		{
+			if (paramIdx >= params.size())
+			{
+				server.sendToClient(client, ERR_NEEDMOREPARAMS(client.getNickname(), "MODE"));
+				continue;
+			}
+			
+			Client *target_client = server.findClientByNickname(params[paramIdx]);
+			
+			if (!target_client || !chan->hasMember(target_client->getFd()))
+			{
+				server.sendToClient(client, ERR_USERNOTINCHANNEL(client.getNickname(), params[paramIdx], target));
+				paramIdx++;
+				continue;
+			}
+			chan->setOperator(target_client->getFd(), sign == '+');
+			appliedModes += c;
+			appliedParams += " " + params[paramIdx];
+			paramIdx++;
+		}
+		else if (c == 'l')
+		{
+			if (sign == '+')
+			{
+				if (paramIdx >= params.size())
+				{
+					server.sendToClient(client, ERR_NEEDMOREPARAMS(client.getNickname(), "MODE"));
+					continue ;
+				}
+				std::istringstream	iss(params[paramIdx]);
+				size_t				limit = 0;
+				iss >> limit;
+				if (iss.fail() || limit == 0)
+				{
+					paramIdx++;
+					continue ;
+				}
+				chan->setUserLimit(limit);
+				appliedParams += " " + params[paramIdx];
+				paramIdx++;
+			}
+			else
+				chan->clearUserLimit();
+			appliedModes += c;
+		}
+		else
+			server.sendToClient(client, ERR_UNKNOWNMODE(client.getNickname(), std::string(1, c)));
+	}
+	
+	if (!appliedModes.empty())
+	{
+		std::string modeChange = std::string(1, sign) + appliedModes + appliedParams;
+		server.broadcastToChannel(*chan, RPL_MODE(USRPREFIX(client), target, modeChange), -1);
+	}
+    return (true);
 }
 
 bool CommandHandler::topic(Server &server, Client &client, const Message &msg)
