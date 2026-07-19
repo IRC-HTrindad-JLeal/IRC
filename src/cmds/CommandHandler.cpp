@@ -68,7 +68,7 @@ bool	CommandHandler::dispatch(const std::string &cmd, Server &server, Client &cl
 	}
 	if (requiresAuth(cmd) && !client.isRegistered())
 	{
-		server.sendToClient(client, ERR_NOTREGISTERED(client.getNickname()));
+		server.sendToClient(client, ERR_NOTREGISTERED(replyNick(client)));
 		return true;
 	}
 
@@ -122,6 +122,7 @@ bool	CommandHandler::nick(Server &server, Client &client, const Message &msg)
 	if (nick.size() > 9)
 	{
 		server.sendToClient(client, ERR_NICKTOOLONG(client.getNickname().empty() ? "*" : client.getNickname(), nick));
+		return true;
 	}
 	server.registerNickname(client, nick);
 	tryRegistration(server, client);
