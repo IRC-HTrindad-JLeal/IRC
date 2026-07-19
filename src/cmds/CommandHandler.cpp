@@ -59,18 +59,19 @@ bool	CommandHandler::execute(Server &server, Client &client, const Message &msg)
 
 bool	CommandHandler::dispatch(const std::string &cmd, Server &server, Client &client, const Message &msg)
 {
+	std::map<std::string, CommandFt>::iterator it = _handlers.find(cmd);
+
+	if (it == _handlers.end())
+	{
+		server.sendToClient(client, ERR_UNKNOWNCOMMAND(replyNick(client), msg.getCommand()));
+		return true;
+	}
 	if (requiresAuth(cmd) && !client.isRegistered())
 	{
 		server.sendToClient(client, ERR_NOTREGISTERED(client.getNickname()));
 		return true;
 	}
-	std::map<std::string, CommandFt>::iterator it = _handlers.find(cmd);
 
-	if (it == _handlers.end())
-	{
-		server.sendToClient(client, ERR_UNKNOWNCOMMAND(client.getNickname(), msg.getCommand()));
-		return true;
-	}
 	return (this->*(it->second))(server, client, msg);
 }
 
@@ -81,7 +82,7 @@ bool	CommandHandler::pass(Server &server, Client &client, const Message &msg)
 		server.sendToClient(client, ERR_ALREADYREGISTERED(client.getNickname()));
 		return true;
 	}
-	if (msg.getParams().empty())
+	if (msg.paramCount() == 0)
 	{
 		server.sendToClient(client, ERR_NEEDMOREPARAMS(client.getNickname(), msg.getCommand()));
 		return true;
@@ -100,30 +101,28 @@ bool	CommandHandler::pass(Server &server, Client &client, const Message &msg)
 
 bool	CommandHandler::nick(Server &server, Client &client, const Message &msg)
 {
-	if (msg.getParams().empty())
+	if (msg.paramCount() == 0)
 	{
 		server.sendToClient(client, ERR_NONICKNAMEGIVEN(client.getNickname()));
 		return true;
 	}
 	
-	// TODO: change this variable back into a reference once the Message getters are updated.
-	const std::string nick = msg.getMiddle();
+	const std::string &nick = msg.getMiddle();
 	
-	if(!server.isNicknameAvailable(nick))
-	{
-		server.sendToClient(client, ERR_NICKNAMEINUSE(client.getNickname(), nick));
-		return true;
-	}
 	if (!nickValid(nick))
 	{
 		server.sendToClient(client, ERR_ERRONEUSNICKNAME(client.getNickname(), nick));
+		return true;
+	}
+	if(!server.isNicknameAvailable(nick))
+	{
+		server.sendToClient(client, ERR_NICKNAMEINUSE(client.getNickname(), nick));
 		return true;
 	}
 	if (nick.size() > 9)
 	{
 		server.sendToClient(client, ERR_NICKTOOLONG(client.getNickname().empty() ? "*" : client.getNickname(), nick));
 	}
-	// broadcast("<oldnick>!user@host NICK <nick>"); 
 	server.registerNickname(client, nick);
 	tryRegistration(server, client);
 	return true;
@@ -137,9 +136,9 @@ bool	CommandHandler::user(Server &server, Client &client, const Message &msg)
 		return true;
 	}
 
-	std::vector<std::string> p = msg.getParams();
+	const std::vector<std::string> &p = msg.getParams();
 
-	if(p.size() < 4)
+	if(msg.paramCount() < 4)
 	{
 		server.sendToClient(client, ERR_NEEDMOREPARAMS(client.getNickname(), msg.getCommand()));
 		return true;
@@ -156,7 +155,7 @@ bool	CommandHandler::user(Server &server, Client &client, const Message &msg)
 
 bool	CommandHandler::ping(Server &server, Client &client, const Message &msg)
 {
-	if (msg.getParams().empty())
+	if (msg.paramCount() == 0)
 		return true;
 	server.sendToClient(client, RPL_PONG(msg.getMiddle()));
 	return true;
@@ -174,11 +173,9 @@ bool	CommandHandler::quit(Server &server, Client &client, const Message &msg)
 // Implemented minial cap for testing, needs review
 bool CommandHandler::cap(Server &server, Client &client, const Message &msg)
 {
-	std::vector<std::string> params = msg.getParams();
-	std::string nick = client.getNickname();
+	const std::vector<std::string> &params = msg.getParams();
+	const std::string &nick = client.isRegistered() ? client.getNickname() : "*";
 
-	if (nick.empty())
-		nick = "*";
 	if (params.empty())
 		return (true);
 	if (params[0] == "LS")
@@ -268,7 +265,7 @@ static void welcomeMsg(Server &server, Client &client, Channel &channel)
 
 bool CommandHandler::join(Server &server, Client &client, const Message &msg)
 {
-	std::vector<std::string> params = msg.getParams();
+	const std::vector<std::string> &params = msg.getParams();
 
 	if (params.empty())
 	{
@@ -341,16 +338,21 @@ bool CommandHandler::join(Server &server, Client &client, const Message &msg)
 
 bool CommandHandler::privmsg(Server &server, Client &client, const Message &msg)
 {
-	//:nick!user@host PRIVMSG target :message
-	std::string target = msg.getMiddle();
-	std::string text = msg.getTrailing();
-	
-	if (target.empty())
+	if (msg.paramCount() < 1)
 	{
 		server.sendToClient(client, ERR_NORECIPIENT(client.getNickname(), "PRIVMSG"));
 		return true;
 	}
-	else if (text.empty())
+	if (msg.paramCount() < 2)
+	{
+		server.sendToClient(client, ERR_NOTEXTTOSEND(client.getNickname()));
+		return true;
+	}
+
+	const std::string &target = msg.getParam(0);
+	const std::string &text = msg.getParam(1);
+
+	if (text.empty())
 	{
 		server.sendToClient(client, ERR_NOTEXTTOSEND(client.getNickname()));
 		return true;

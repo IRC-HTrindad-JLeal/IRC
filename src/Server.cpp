@@ -20,6 +20,7 @@ volatile sig_atomic_t Server::sig = 1;
 Server::Server()
 {
 	_commandHandler = NULL;
+	/*
 	validCmds.push_back("PASS");
 	validCmds.push_back("QUIT");
 	validCmds.push_back("PING");
@@ -33,13 +34,14 @@ Server::Server()
 	validCmds.push_back("USER");
 	validCmds.push_back("NICK");
 	validCmds.push_back("CAP");
+	*/
 	serverSocket = -1;
 }
 
 Server::~Server()
 {
 	delete _commandHandler;
-	validCmds.clear();
+	//validCmds.clear();
 	clearClients();
 	closeFds();
 }
@@ -265,7 +267,7 @@ bool Server::retrieveData(int fd)
 			Message msg;
 			try
 			{
-				msg = Message::parse(line, validCmds);
+				msg = Message::parse(line);
 			}
 			catch (const std::exception &e)
 			{

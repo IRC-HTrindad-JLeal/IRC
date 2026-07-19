@@ -58,3 +58,10 @@ std::vector<std::string> CommandHandler::split(const std::string &str, char deli
 
 	return result;
 }
+
+std::string	CommandHandler::replyNick(const Client& client) const
+{
+	if (client.getNickname().empty())
+		return "*";
+	return client.getNickname();
+}
