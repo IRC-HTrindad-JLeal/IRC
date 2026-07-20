@@ -110,9 +110,10 @@ bool	CommandHandler::nick(Server &server, Client &client, const Message &msg)
 		return true;
 	}
 	
-	// TODO: change this variable back into a reference once the Message getters are updated.
 	const std::string &nick = msg.getMiddle();
 	
+	if (nick == client.getNickname())
+		return true;
 	if(!server.isNicknameAvailable(nick))
 	{
 		server.sendToClient(client, ERR_NICKNAMEINUSE(nickOrStar(client), nick));
@@ -131,11 +132,15 @@ bool	CommandHandler::nick(Server &server, Client &client, const Message &msg)
 	if (client.isRegistered())
 	{
 		std::string	prefix = USRPREFIX(client);
-		//broadtcast to all channels client is in
-		// (to implement after channels are working)
+		server.registerNickname(client, nick);
+		server.sendToClient(client, RPL_NICK(prefix, nick));
+		server.broadcastToClientChannels(client, RPL_NICK(prefix, nick), client.getFd());
 	}
-	server.registerNickname(client, nick);
-	tryRegistration(server, client);
+	else
+	{
+		server.registerNickname(client, nick);
+		tryRegistration(server, client);
+	}
 	return true;
 }
 
