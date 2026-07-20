@@ -6,7 +6,7 @@
 /*   By: mely-pan <mely-pan@student.42lisboa.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/07 02:43:38 by htrindad          #+#    #+#             */
-/*   Updated: 2026/06/24 18:53:34 by mely-pan         ###   ########.fr       */
+/*   Updated: 2026/07/08 21:43:15 by mely-pan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 #include <CommandHandler.h>
 #include <Message.h>
 #include <master.h>
+#include <ctime>
 
 volatile sig_atomic_t Server::sig = 1;
 
@@ -45,6 +46,8 @@ Server::~Server()
 }
 
 const std::string	&Server::getPassword() const { return this->password; }
+
+const std::string	&Server::getCreationDate() const { return this->creationDate; }
 
 void		Server::serverThread()
 {
@@ -221,6 +224,12 @@ void		Server::serverInit(int port, const std::string &password)
 		throw std::runtime_error("Password cannot be empty");
 	this->port = port;
 	this->password = password;
+	
+	std::time_t now = std::time(NULL);
+	char		buf[64];
+	std::strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", std::localtime(&now));
+	this-> creationDate = std::string(buf);
+	
 	_commandHandler = new CommandHandler();
 	sockIt();
 	std::cout << GRE << serverSocket << "> Connection succesfull" << WHI << '\n';
