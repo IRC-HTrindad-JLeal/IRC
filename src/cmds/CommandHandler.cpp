@@ -6,7 +6,7 @@
 /*   By: mely-pan <mely-pan@student.42lisboa.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/18 16:55:39 by mely-pan          #+#    #+#             */
-/*   Updated: 2026/07/06 18:02:22 by mely-pan         ###   ########.fr       */
+/*   Updated: 2026/07/18 20:05:42 by mely-pan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,6 +59,11 @@ bool	CommandHandler::execute(Server &server, Client &client, const Message &msg)
 
 bool	CommandHandler::dispatch(const std::string &cmd, Server &server, Client &client, const Message &msg)
 {
+	if (requiresAuth(cmd) && !client.isRegistered())
+	{
+		server.sendToClient(client, ERR_NOTREGISTERED(nickOrStar(client)));
+		return true;
+	}
 	std::map<std::string, CommandFt>::iterator it = _handlers.find(cmd);
 
 	if (it == _handlers.end())
@@ -84,53 +89,74 @@ bool	CommandHandler::pass(Server &server, Client &client, const Message &msg)
 	}
 	if (msg.paramCount() == 0)
 	{
-		server.sendToClient(client, ERR_NEEDMOREPARAMS(client.getNickname(), msg.getCommand()));
+		server.sendToClient(client, ERR_NEEDMOREPARAMS(nickOrStar(client), msg.getCommand()));
 		return true;
 	}
 	if (client.isPassAccepted())
 		return true;
 	if (msg.getMiddle() != server.getPassword())
 	{
-		server.sendToClient(client, ERR_PASSWDMISMATCH(client.getNickname()));
+		server.sendToClient(client, ERR_PASSWDMISMATCH(nickOrStar(client)));
 		return true;
 	}
 	client.setPassAccepted(true);
-	tryRegistration(server, client);
 	return (true);
 }
 
 bool	CommandHandler::nick(Server &server, Client &client, const Message &msg)
 {
-	if (msg.paramCount() == 0)
+	if (!client.isPassAccepted())
+    {
+        server.sendToClient(client, ERR_NOTREGISTERED(nickOrStar(client)));
+        return true;
+    }
+	if (msg.getParams().empty())
 	{
-		server.sendToClient(client, ERR_NONICKNAMEGIVEN(client.getNickname()));
+		server.sendToClient(client, ERR_NONICKNAMEGIVEN(nickOrStar(client)));
 		return true;
 	}
 	
 	const std::string &nick = msg.getMiddle();
 	
-	if (!nickValid(nick))
+	if (nick == client.getNickname())
+		return true;
+	if(!server.isNicknameAvailable(nick))
 	{
-		server.sendToClient(client, ERR_ERRONEUSNICKNAME(client.getNickname(), nick));
+		server.sendToClient(client, ERR_NICKNAMEINUSE(nickOrStar(client), nick));
 		return true;
 	}
 	if(!server.isNicknameAvailable(nick))
 	{
-		server.sendToClient(client, ERR_NICKNAMEINUSE(client.getNickname(), nick));
+		server.sendToClient(client, ERR_ERRONEUSNICKNAME(nickOrStar(client), nick));
 		return true;
 	}
 	if (nick.size() > 9)
 	{
-		server.sendToClient(client, ERR_NICKTOOLONG(client.getNickname().empty() ? "*" : client.getNickname(), nick));
+		server.sendToClient(client, ERR_NICKTOOLONG(nickOrStar(client), nick));
 		return true;
 	}
-	server.registerNickname(client, nick);
-	tryRegistration(server, client);
+	if (client.isRegistered())
+	{
+		std::string	prefix = USRPREFIX(client);
+		server.registerNickname(client, nick);
+		server.sendToClient(client, RPL_NICK(prefix, nick));
+		server.broadcastToClientChannels(client, RPL_NICK(prefix, nick), client.getFd());
+	}
+	else
+	{
+		server.registerNickname(client, nick);
+		tryRegistration(server, client);
+	}
 	return true;
 }
 
 bool	CommandHandler::user(Server &server, Client &client, const Message &msg)
 {
+	if (!client.isPassAccepted())
+	{
+		server.sendToClient(client, ERR_NOTREGISTERED(nickOrStar(client)));
+		return true;
+	}
 	if (client.isRegistered())
 	{
 		server.sendToClient(client, ERR_ALREADYREGISTERED(client.getNickname()));
@@ -141,7 +167,7 @@ bool	CommandHandler::user(Server &server, Client &client, const Message &msg)
 
 	if(msg.paramCount() < 4)
 	{
-		server.sendToClient(client, ERR_NEEDMOREPARAMS(client.getNickname(), msg.getCommand()));
+		server.sendToClient(client, ERR_NEEDMOREPARAMS(nickOrStar(client), msg.getCommand()));
 		return true;
 	}
 	client.setUsername(p[0]);
@@ -156,8 +182,11 @@ bool	CommandHandler::user(Server &server, Client &client, const Message &msg)
 
 bool	CommandHandler::ping(Server &server, Client &client, const Message &msg)
 {
-	if (msg.paramCount() == 0)
+	if (msg.getParams().empty())
+	{
+		server.sendToClient(client, ERR_NEEDMOREPARAMS(nickOrStar(client), "PING"));
 		return true;
+	}
 	server.sendToClient(client, RPL_PONG(msg.getMiddle()));
 	return true;
 }
