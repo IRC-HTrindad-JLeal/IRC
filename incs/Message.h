@@ -13,6 +13,7 @@
 #pragma once
 #include <master.h>
 
+/*
 enum conditions
 {
 	NONE,	// undefined
@@ -24,6 +25,7 @@ enum conditions
 	QUAD,	// takes 4 parameters
 	DTQUAD,	// Takes a range of 2 to 4 parameters
 };
+*/
 
 class Message
 {
@@ -36,15 +38,18 @@ class Message
 	public:
 		Message();
 		~Message();
-		std::string			getMessage() const;
-		std::string			getCommand() const;
-		std::vector<std::string>	getParams() const;
-		std::string			getMiddle() const; // target
-		std::string			getTrailing() const;
+		const std::string				&getMessage() const;
+		const std::string				&getCommand() const;
+		const std::vector<std::string>	&getParams() const;
+		const std::string			&getMiddle() const; // target
+		const std::string			&getTrailing() const;
+		const std::string	&getParam(size_t i) const;
+		bool				hasParam(size_t i) const;
+		size_t				paramCount() const;
 		void				setMessage(const std::string &msg);
 		void				setCommand(const std::string &cmd);
 		void				setParams(const std::vector<std::string> &par);
 		void				setMiddle(const std::string &mid);
 		void				setTrailing(const std::string &trail);
-		static Message			parse(const std::string &raw, const std::vector<std::string> &cmdLst);
+		static Message			parse(const std::string &raw);
 };

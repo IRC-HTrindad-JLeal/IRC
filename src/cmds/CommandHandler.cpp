@@ -68,9 +68,15 @@ bool	CommandHandler::dispatch(const std::string &cmd, Server &server, Client &cl
 
 	if (it == _handlers.end())
 	{
-		server.sendToClient(client, ERR_UNKNOWNCOMMAND(client.getNickname(), msg.getCommand()));
+		server.sendToClient(client, ERR_UNKNOWNCOMMAND(replyNick(client), msg.getCommand()));
 		return true;
 	}
+	if (requiresAuth(cmd) && !client.isRegistered())
+	{
+		server.sendToClient(client, ERR_NOTREGISTERED(replyNick(client)));
+		return true;
+	}
+
 	return (this->*(it->second))(server, client, msg);
 }
 
@@ -81,7 +87,7 @@ bool	CommandHandler::pass(Server &server, Client &client, const Message &msg)
 		server.sendToClient(client, ERR_ALREADYREGISTERED(client.getNickname()));
 		return true;
 	}
-	if (msg.getParams().empty())
+	if (msg.paramCount() == 0)
 	{
 		server.sendToClient(client, ERR_NEEDMOREPARAMS(nickOrStar(client), msg.getCommand()));
 		return true;
@@ -119,7 +125,7 @@ bool	CommandHandler::nick(Server &server, Client &client, const Message &msg)
 		server.sendToClient(client, ERR_NICKNAMEINUSE(nickOrStar(client), nick));
 		return true;
 	}
-	if (!nickValid(nick))
+	if(!server.isNicknameAvailable(nick))
 	{
 		server.sendToClient(client, ERR_ERRONEUSNICKNAME(nickOrStar(client), nick));
 		return true;
@@ -157,9 +163,9 @@ bool	CommandHandler::user(Server &server, Client &client, const Message &msg)
 		return true;
 	}
 
-	std::vector<std::string> p = msg.getParams();
+	const std::vector<std::string> &p = msg.getParams();
 
-	if(p.size() < 4)
+	if(msg.paramCount() < 4)
 	{
 		server.sendToClient(client, ERR_NEEDMOREPARAMS(nickOrStar(client), msg.getCommand()));
 		return true;
@@ -197,11 +203,9 @@ bool	CommandHandler::quit(Server &server, Client &client, const Message &msg)
 // Implemented minial cap for testing, needs review
 bool CommandHandler::cap(Server &server, Client &client, const Message &msg)
 {
-	std::vector<std::string> params = msg.getParams();
-	std::string nick = client.getNickname();
+	const std::vector<std::string> &params = msg.getParams();
+	const std::string &nick = client.isRegistered() ? client.getNickname() : "*";
 
-	if (nick.empty())
-		nick = "*";
 	if (params.empty())
 		return (true);
 	if (params[0] == "LS")
@@ -291,7 +295,7 @@ static void welcomeMsg(Server &server, Client &client, Channel &channel)
 
 bool CommandHandler::join(Server &server, Client &client, const Message &msg)
 {
-	std::vector<std::string> params = msg.getParams();
+	const std::vector<std::string> &params = msg.getParams();
 
 	if (params.empty())
 	{
@@ -364,16 +368,21 @@ bool CommandHandler::join(Server &server, Client &client, const Message &msg)
 
 bool CommandHandler::privmsg(Server &server, Client &client, const Message &msg)
 {
-	//:nick!user@host PRIVMSG target :message
-	std::string target = msg.getMiddle();
-	std::string text = msg.getTrailing();
-	
-	if (target.empty())
+	if (msg.paramCount() < 1)
 	{
 		server.sendToClient(client, ERR_NORECIPIENT(client.getNickname(), "PRIVMSG"));
 		return true;
 	}
-	else if (text.empty())
+	if (msg.paramCount() < 2)
+	{
+		server.sendToClient(client, ERR_NOTEXTTOSEND(client.getNickname()));
+		return true;
+	}
+
+	const std::string &target = msg.getParam(0);
+	const std::string &text = msg.getParam(1);
+
+	if (text.empty())
 	{
 		server.sendToClient(client, ERR_NOTEXTTOSEND(client.getNickname()));
 		return true;

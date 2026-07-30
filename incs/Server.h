@@ -32,7 +32,7 @@ class Server
 		std::map<std::string, Channel>	channels;
 
 		std::vector<struct pollfd>	fds;
-		std::vector<std::string>	validCmds;
+		// std::vector<std::string>	validCmds;
 		std::string					password;
 		std::string					creationDate;
 		CommandHandler				*_commandHandler;
