@@ -6,7 +6,7 @@
 /*   By: mely-pan <mely-pan@student.42lisboa.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/18 16:55:39 by mely-pan          #+#    #+#             */
-/*   Updated: 2026/07/18 19:36:29 by mely-pan         ###   ########.fr       */
+/*   Updated: 2026/07/31 00:09:11 by mely-pan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -249,7 +249,7 @@ bool CommandHandler::mode(Server &server, Client &client, const Message &msg)
 		return true;
 	}
 	
-	const std::string &target = msg.getMiddle();
+	const std::string &target = params[0];
 
 	//user MODE
 	if (target[0] != '#')
@@ -292,8 +292,10 @@ bool CommandHandler::mode(Server &server, Client &client, const Message &msg)
 	const std::string	&modestr = params[1];
 	size_t				paramIdx = 2;
 	char				sign = '+';
-	std::string			appliedModes = "";
-	std::string			appliedParams = "";
+	std::string			appliedPlus = "";
+	std::string			appliedMinus = "";
+	std::string			appliedPlusParams = "";
+	std::string			appliedMinusParams = "";
 	bool				hasSign = false;
 
 	for (size_t i = 0; i < modestr.size(); ++i)
@@ -310,13 +312,19 @@ bool CommandHandler::mode(Server &server, Client &client, const Message &msg)
 			continue;
 		if (c == 'i')
 		{
-			chan->setInviteOnly(sign == '+');
-			appliedModes += c;
+    		chan->setInviteOnly(sign == '+');
+    		if (sign == '+')
+				appliedPlus += c;
+    		else
+				appliedMinus += c;
 		}
 		else if (c == 't')
 		{
 			chan->setTopicOnly(sign == '+');
-			appliedModes += c;
+			if (sign == '+')
+				appliedPlus += c;
+			else
+				appliedMinus += c;
 		}
 		else if (c == 'k')
 		{
@@ -328,12 +336,15 @@ bool CommandHandler::mode(Server &server, Client &client, const Message &msg)
 					continue;
 				}
 				chan->setKey(params[paramIdx]);
-				appliedParams += " " + params[paramIdx];
+				appliedPlus += c;
+				appliedPlusParams += " " + params[paramIdx];
 				paramIdx++;
 			}
 			else
+			{
 				chan->clearKey();
-			appliedModes += c;
+				appliedMinus += c;
+			}
 		}
 		else if (c == 'o')
 		{
@@ -351,9 +362,17 @@ bool CommandHandler::mode(Server &server, Client &client, const Message &msg)
 				paramIdx++;
 				continue;
 			}
+			if (sign == '+')
+			{
+				appliedPlus += c;
+				appliedPlusParams += " " + params[paramIdx]; 
+			}
+			else
+			{
+				appliedMinus += c;
+				appliedMinusParams += " " + params[paramIdx];
+			}
 			chan->setOperator(target_client->getFd(), sign == '+');
-			appliedModes += c;
-			appliedParams += " " + params[paramIdx];
 			paramIdx++;
 		}
 		else if (c == 'l')
@@ -365,31 +384,56 @@ bool CommandHandler::mode(Server &server, Client &client, const Message &msg)
 					server.sendToClient(client, ERR_NEEDMOREPARAMS(client.getNickname(), "MODE"));
 					continue ;
 				}
-				std::istringstream	iss(params[paramIdx]);
+				//validate all the char are digits
+				const std::string	&limitStr = params[paramIdx];
+				bool				valid = !limitStr.empty();
+
+				for (size_t j = 0; limitStr.size() > j; j++)
+				{
+					if (!std::isdigit(limitStr[j]))
+					{
+						valid = false;
+						break ;
+					}
+				}
+				if (!valid)
+				{
+					paramIdx++;
+					continue ;
+				}
+				
+				std::istringstream	iss(limitStr);
 				size_t				limit = 0;
+				
 				iss >> limit;
-				if (iss.fail() || limit == 0)
+				if (iss.fail() || !iss.eof() || limit == 0)
 				{
 					paramIdx++;
 					continue ;
 				}
 				chan->setUserLimit(limit);
-				appliedParams += " " + params[paramIdx];
+				appliedPlusParams += " " + limitStr;
+				appliedPlus += c;
 				paramIdx++;
 			}
 			else
+			{
 				chan->clearUserLimit();
-			appliedModes += c;
+				appliedMinus += c;
+			}
 		}
 		else
 			server.sendToClient(client, ERR_UNKNOWNMODE(client.getNickname(), std::string(1, c)));
 	}
+
+	std::string modeChange = "";
 	
-	if (!appliedModes.empty())
-	{
-		std::string modeChange = std::string(1, sign) + appliedModes + appliedParams;
-		server.broadcastToChannel(*chan, RPL_MODE(USRPREFIX(client), target, modeChange), -1);
-	}
+	if (!appliedPlus.empty())
+	    modeChange += "+" + appliedPlus + appliedPlusParams;
+	if (!appliedMinus.empty())
+	    modeChange += "-" + appliedMinus + appliedMinusParams;
+	if (!modeChange.empty())
+	    server.broadcastToChannel(*chan, RPL_MODE(USRPREFIX(client), target, modeChange), -1);
     return (true);
 }
 
