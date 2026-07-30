@@ -1,5 +1,11 @@
 CompileFlags:
-  Add: [-I../incs/, -I../../incs/, -Wall, -Werror, -Wextra, -std=c++98]
+  Add:
+    - -I../incs/
+    - -I../../incs/
+    - -Wall
+    - -Werror
+    - -Wextra
+    - -std=c++98
 Diagnostics:
   UnusedIncludes: None
 Completion:
