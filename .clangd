@@ -1,6 +1,7 @@
 CompileFlags:
   Add:
-    - -I/home/jordanleal/42/Projects/IRC/incs
+    - -I../incs/
+    - -I../../incs/
     - -Wall
     - -Werror
     - -Wextra
