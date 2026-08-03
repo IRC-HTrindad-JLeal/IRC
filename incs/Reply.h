@@ -6,7 +6,7 @@
 /*   By: mely-pan <mely-pan@student.42lisboa.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/18 21:18:58 by mely-pan          #+#    #+#             */
-/*   Updated: 2026/07/01 17:35:52 by mely-pan         ###   ########.fr       */
+/*   Updated: 2026/07/15 19:33:22 by mely-pan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -94,6 +94,9 @@
 	((prefix) + " KICK " + (channel) + " " + (target) + " :" + (reason))
 
 // MODE
+#define RPL_UMODEIS(nick, modestr) \
+	(":" SRV " 221 " + (nick) + " " + (modestr))
+
 #define RPL_CHANNELMODEIS(nick, channel, modestr) \
 	(":" SRV " 324 " + (nick) + " " + (channel) + " " + (modestr))
 
@@ -175,4 +178,7 @@
 // MODE
 #define ERR_UNKNOWNMODE(nick, modechar) \
 	(":" SRV " 472 " + (nick) + " " + (modechar) + " :is unknown mode char")
+
+#define ERR_USERSDONTMATCH(nick) \
+	(":" SRV " 502 " + (nick) + " :Cant change mode for other users")
 
