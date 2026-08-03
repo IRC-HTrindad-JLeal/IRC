@@ -6,7 +6,7 @@
 /*   By: mely-pan <mely-pan@student.42lisboa.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/07 02:43:38 by htrindad          #+#    #+#             */
-/*   Updated: 2026/06/24 18:53:34 by mely-pan         ###   ########.fr       */
+/*   Updated: 2026/07/08 21:43:15 by mely-pan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,12 +14,14 @@
 #include <CommandHandler.h>
 #include <Message.h>
 #include <master.h>
+#include <ctime>
 
 volatile sig_atomic_t Server::sig = 1;
 
 Server::Server()
 {
 	_commandHandler = NULL;
+	/*
 	validCmds.push_back("PASS");
 	validCmds.push_back("QUIT");
 	validCmds.push_back("PING");
@@ -33,18 +35,21 @@ Server::Server()
 	validCmds.push_back("USER");
 	validCmds.push_back("NICK");
 	validCmds.push_back("CAP");
+	*/
 	serverSocket = -1;
 }
 
 Server::~Server()
 {
 	delete _commandHandler;
-	validCmds.clear();
+	//validCmds.clear();
 	clearClients();
 	closeFds();
 }
 
 const std::string	&Server::getPassword() const { return this->password; }
+
+const std::string	&Server::getCreationDate() const { return this->creationDate; }
 
 void		Server::serverThread()
 {
@@ -221,6 +226,12 @@ void		Server::serverInit(int port, const std::string &password)
 		throw std::runtime_error("Password cannot be empty");
 	this->port = port;
 	this->password = password;
+	
+	std::time_t now = std::time(NULL);
+	char		buf[64];
+	std::strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", std::localtime(&now));
+	this-> creationDate = std::string(buf);
+	
 	_commandHandler = new CommandHandler();
 	sockIt();
 	std::cout << GRE << serverSocket << "> Connection succesfull" << WHI << '\n';
@@ -265,7 +276,7 @@ bool Server::retrieveData(int fd)
 			Message msg;
 			try
 			{
-				msg = Message::parse(line, validCmds);
+				msg = Message::parse(line);
 			}
 			catch (const std::exception &e)
 			{
@@ -476,6 +487,46 @@ bool	Server::broadcastToChannel(const Channel &channel, const std::string &messa
 			continue;
 		if (!sendToClient(*client, message))
 			ok = false;
+	}
+	return ok;
+}
+
+bool	Server::broadcastToClientChannels(const Client &client, const std::string &message, int exceptFd)
+{
+	std::set<int>	recipients;
+	bool			ok = true;
+	int				cFd = client.getFd();
+
+	for(std::map<std::string, Channel>::const_iterator it = channels.begin(); it != channels.end(); ++it)
+	{
+		if (!it->second.hasMember(cFd))
+			continue;
+		const std::map<int, bool> &members = it->second.getMembers();
+		for (std::map<int, bool>::const_iterator m = members.begin(); m != members.end(); ++m)
+		{
+			if (m->first != exceptFd)
+				recipients.insert(m->first);
+		}
+	}
+
+	for (std::set<int>::iterator it = recipients.begin(); it != recipients.end(); ++it)
+	{
+		Client *target = findClientByFd(*it);
+		if (!target || !sendToClient(*target, message))
+			ok = false;
+	}
+	return (ok);
+}
+
+bool	Server::broadcastAllRegistered(const std::string &message, int exceptFd) 
+{
+	bool ok = true;
+
+	for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); ++it)
+	{
+		if (it->second.isRegistered() && it->first != exceptFd)
+			if (!sendToClient(it->second, message))
+				ok = false;
 	}
 	return ok;
 }

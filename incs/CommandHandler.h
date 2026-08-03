@@ -6,7 +6,7 @@
 /*   By: mely-pan <mely-pan@student.42lisboa.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/18 21:17:45 by mely-pan          #+#    #+#             */
-/*   Updated: 2026/07/01 17:05:56 by mely-pan         ###   ########.fr       */
+/*   Updated: 2026/07/18 19:58:19 by mely-pan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,8 +46,12 @@ class CommandHandler
 		//utils
 		bool	nickValid(const std::string &nick);
 		void	tryRegistration(Server &server, Client &client);
+		std::vector<std::string> split(const std::string &str, char delimiter);
+		std::string	replyNick(const Client& client) const;
 	public:
 		CommandHandler();
 		~CommandHandler();
 		bool	execute(Server &server, Client &client, const Message &msg);
 };
+
+const std::string	nickOrStar(const Client &client);

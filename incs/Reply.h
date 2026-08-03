@@ -129,6 +129,9 @@
 #define ERR_ERRONEUSNICKNAME(nick, badnick) \
 	(":" SRV " 432 " + (nick) + " " + (badnick) + " :Erroneous nickname")
 
+#define ERR_NICKTOOLONG(client, nick) \
+	(":" SRV " 432 " + (client) + " " + (nick) + " :Nickname too long, max. 9 characters")
+
 #define ERR_NICKNAMEINUSE(nick, badnick) \
 	(":" SRV " 433 " + (nick) + " " + (badnick) + " :Nickname is already in use")
 
