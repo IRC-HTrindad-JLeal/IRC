@@ -6,7 +6,7 @@
 /*   By: mely-pan <mely-pan@student.42lisboa.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/18 16:55:39 by mely-pan          #+#    #+#             */
-/*   Updated: 2026/07/18 20:05:42 by mely-pan         ###   ########.fr       */
+/*   Updated: 2026/08/05 20:29:25 by mely-pan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -419,20 +419,156 @@ bool CommandHandler::mode(Server &server, Client &client, const Message &msg)
 
 bool CommandHandler::topic(Server &server, Client &client, const Message &msg)
 {
-    (void)server; (void)client; (void)msg;
-    return (true); // TODO
+	std::vector<std::string>params = msg.getParams();
+
+	if (params.empty())
+	{
+		server.sendToClient(client, ERR_NEEDMOREPARAMS(client.getNickname(), "TOPIC"));
+		return true;
+	}
+	
+	const std::string &chanName = params[0];
+	Channel *chan = server.findChannel(chanName);
+
+	if (!chan)
+	{
+		server.sendToClient(client, ERR_NOSUCHCHANNEL(client.getNickname(), chanName));
+		return true;
+	}
+	if (!chan->hasMember(client.getFd()))
+	{
+		server.sendToClient(client, ERR_NOTONCHANNEL(client.getNickname(), chanName));
+		return true;
+	}
+	
+	// TOPIC #chan - consult mode
+	if (params.size() < 2)
+	{
+		if (chan->getTopic().empty())
+			server.sendToClient(client, RPL_NOTOPIC(client.getNickname(), chanName));
+		else
+			server.sendToClient(client, RPL_TOPIC(client.getNickname(), chanName, chan->getTopic()));
+		return true;
+	}
+
+	//TOPIC #chan :new - change topic
+	if (chan->isTopicOnly() && !chan->isOperator(client.getFd()))
+	{
+		server.sendToClient(client, ERR_CHANOPRIVSNEEDED(client.getNickname(), chanName));
+		return true;
+	}
+	
+	std::string	newTopic = params[1];
+	
+	if (!newTopic.empty() && newTopic[0] == ':')
+		newTopic.erase(0, 1);
+
+	chan->setTopic(newTopic);
+	server.broadcastToChannel(*chan, RPL_TOPIC_CHANGE(USRPREFIX(client), chanName, newTopic), -1);
+    return (true);
 }
 
 bool CommandHandler::invite(Server &server, Client &client, const Message &msg)
 {
-    (void)server; (void)client; (void)msg;
-    return (true); // TODO
+    const std::vector<std::string>params = msg.getParams();
+
+	if (params.size() < 2)
+	{
+		server.sendToClient(client, ERR_NEEDMOREPARAMS(client.getNickname(), "INVITE"));
+		return true;
+	}
+	
+	const std::string	&targetNick = params[0];
+	const std::string	&chanName = params[1];
+	Channel *chan = server.findChannel(chanName);
+
+	if (!chan)
+	{
+		server.sendToClient(client, ERR_NOSUCHCHANNEL(client.getNickname(), chanName));
+		return true;
+	}
+	if (!chan->hasMember(client.getFd()))
+	{
+		server.sendToClient(client, ERR_NOTONCHANNEL(client.getNickname(), chanName));
+		return true;
+	}
+	if (chan->isInviteOnly() && !chan->isOperator(client.getFd()))
+	{
+		server.sendToClient(client, ERR_CHANOPRIVSNEEDED(client.getNickname(), chanName));
+		return true;
+	}
+	
+	Client	*targetClient = server.findClientByNickname(targetNick);
+
+	if(!targetClient)
+	{
+		server.sendToClient(client, ERR_NOSUCHNICK(client.getNickname(), targetNick));
+		return true;
+	}
+	if (chan->hasMember(targetClient->getFd()))
+	{
+		server.sendToClient(client, ERR_USERONCHANNEL(client.getNickname(), targetNick, chanName));
+		return true;
+	}
+	
+	chan->invite(targetClient->getFd());
+
+	server.sendToClient(client, RPL_INVITING(client.getNickname(), targetNick, chanName));
+	server.sendToClient(*targetClient, RPL_INVITE(USRPREFIX(client), targetNick, chanName));
+    return (true);
 }
 
 bool CommandHandler::kick(Server &server, Client &client, const Message &msg)
 {
-    (void)server; (void)client; (void)msg;
-    return (true); // TODO
+    const std::vector<std::string>params = msg.getParams();
+
+	if (params.size() < 2)
+	{
+		server.sendToClient(client, ERR_NEEDMOREPARAMS(client.getNickname(), "KICK"));
+		return true;
+	}
+
+	const std::string	&chanName = params[0];
+	const std::string	&targetNick = params[1];
+	std::string			reason;
+	
+	if (params.size() >= 3)
+		reason = params[2];
+	else
+		reason = client.getNickname();
+	
+	if (!reason.empty() && reason[0] == ':')
+		reason.erase(0, 1);
+	
+	Channel	*chan = server.findChannel(chanName);
+	
+	if (!chan)
+	{
+		server.sendToClient(client, ERR_NOSUCHCHANNEL(client.getNickname(), chanName));
+		return true;
+	}
+	if (!chan->hasMember(client.getFd()))
+	{
+		server.sendToClient(client, ERR_NOTONCHANNEL(client.getNickname(), chanName));
+		return true;
+	}
+	if (!chan->isOperator(client.getFd()))
+	{
+		server.sendToClient(client, ERR_CHANOPRIVSNEEDED(client.getNickname(), chanName));
+		return true;
+	}
+	
+	Client	*targetClient = server.findClientByNickname(targetNick);
+
+	if (!targetClient || !chan->hasMember(targetClient->getFd()))
+	{
+		server.sendToClient(client, ERR_USERNOTINCHANNEL(client.getNickname(), targetNick, chanName));
+		return true;
+	}
+	
+	server.broadcastToChannel(*chan, RPL_KICK(USRPREFIX(client), chanName, targetNick, reason), -1);
+	chan->removeMember(targetClient->getFd());
+    return (true);
 }
 
 
