@@ -6,7 +6,7 @@
 /*   By: mely-pan <mely-pan@student.42lisboa.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/18 16:55:39 by mely-pan          #+#    #+#             */
-/*   Updated: 2026/08/05 20:29:25 by mely-pan         ###   ########.fr       */
+/*   Updated: 2026/08/07 15:19:42 by mely-pan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -719,7 +719,7 @@ bool CommandHandler::invite(Server &server, Client &client, const Message &msg)
 		server.sendToClient(client, ERR_NOTONCHANNEL(client.getNickname(), chanName));
 		return true;
 	}
-	if (chan->isInviteOnly() && !chan->isOperator(client.getFd()))
+	if (!chan->isOperator(client.getFd()))
 	{
 		server.sendToClient(client, ERR_CHANOPRIVSNEEDED(client.getNickname(), chanName));
 		return true;
