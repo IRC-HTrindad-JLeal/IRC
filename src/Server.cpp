@@ -6,7 +6,7 @@
 /*   By: mely-pan <mely-pan@student.42lisboa.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/07 02:43:38 by htrindad          #+#    #+#             */
-/*   Updated: 2026/07/08 21:43:15 by mely-pan         ###   ########.fr       */
+/*   Updated: 2026/08/12 03:24:39 by mely-pan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -454,6 +454,7 @@ Channel	&Server::getOrCreateChannel(const std::string &name)
 	return (channels.insert(std::make_pair(name, Channel(name))).first->second);
 }
 
+// ** Add removeChannel if channel gets empty
 void	Server::removeClientFromChannels(int fd)
 {
 	std::map<std::string, Channel>::iterator it = channels.begin();
@@ -470,6 +471,11 @@ void	Server::removeClientFromChannels(int fd)
 		else
 			++it;
 	}
+}
+
+void	Server::removeChannel(const std::string &chanName)
+{
+	channels.erase(chanName);
 }
 
 bool	Server::broadcastToChannel(const Channel &channel, const std::string &message, int exceptFd)

@@ -6,7 +6,7 @@
 /*   By: mely-pan <mely-pan@student.42lisboa.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/06 22:53:42 by htrindad          #+#    #+#             */
-/*   Updated: 2026/07/08 21:35:16 by mely-pan         ###   ########.fr       */
+/*   Updated: 2026/08/12 03:24:52 by mely-pan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,6 +68,7 @@ class Server
 		Channel	*findChannel(const std::string &name);
 		Channel	&getOrCreateChannel(const std::string &name);
 		void	removeClientFromChannels(int fd);
+		void	removeChannel(const std::string &ChanName);
 
 		bool	broadcastToChannel(const Channel &channel, const std::string &message, int exceptFd);
 		bool	broadcastToClientChannels(const Client &client, const std::string &message, int exceptFd);

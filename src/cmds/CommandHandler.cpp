@@ -6,7 +6,7 @@
 /*   By: mely-pan <mely-pan@student.42lisboa.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/18 16:55:39 by mely-pan          #+#    #+#             */
-/*   Updated: 2026/08/12 03:03:22 by mely-pan         ###   ########.fr       */
+/*   Updated: 2026/08/12 03:22:34 by mely-pan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -800,6 +800,8 @@ bool CommandHandler::kick(Server &server, Client &client, const Message &msg)
 	
 	server.broadcastToChannel(*chan, RPL_KICK(USRPREFIX(client), chanName, targetNick, reason), -1);
 	chan->removeMember(targetClient->getFd());
+	if (chan->empty())
+		server.removeChannel(chanName);
     return (true);
 }
 
