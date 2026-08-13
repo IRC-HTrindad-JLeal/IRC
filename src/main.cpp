@@ -71,7 +71,6 @@ int	main(int ac, char **av)
 		std::cerr << "Insufficient args\n";
 		return -1;
 	}
-	std::cout << "FT_IRC\n";
 	try
 	{
 		setUpSignals();

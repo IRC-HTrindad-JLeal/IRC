@@ -15,6 +15,7 @@
 
 Client::Client()
 	: fd(-1),
+	port(0),
 	queuedBytes(0),
 	passAccepted(false),
 	hasNickname(false),
@@ -24,13 +25,13 @@ Client::Client()
 
 Client::~Client() {}
 
-int Client::getFd() const { return fd; }
-const std::string &Client::getIp() const { return ip; }
-//bool Client::getOp() const { return op; }
+int					Client::getFd() const { return fd; }
+const std::string	&Client::getIp() const { return ip; }
+int					Client::getPort() const { return port; }
 
 void Client::setFd(int fd) { this->fd = fd; }
-//void Client::setOp(bool op) { this->op = op; }
 void Client::setIp(const std::string &ip) { this->ip = ip; }
+void Client::setPort(int port) { this->port = port; }
 
 const std::string &Client::getNickname() const { return nickname; }
 const std::string &Client::getUsername() const { return username; }

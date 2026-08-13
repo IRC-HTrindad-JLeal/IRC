@@ -36,6 +36,14 @@ void	CommandHandler::tryRegistration(Server &server, Client &client)
 {
 	if (!client.tryMarkRegistered())
 		return;
+
+	std::stringstream msg;
+
+	msg << "User \"" << client.getNickname() << "!"
+		<< client.getUsername() << "@"
+		<< client.getIp() << "\" registered "
+		<< "(connection " << client.getFd() << ").";
+	server.logStatus(5, msg.str());
 	
 	server.sendToClient(client, RPL_WELCOME(client.getNickname(), client.getUsername(), client.getIp()));
 	server.sendToClient(client, RPL_YOURHOST(client.getNickname()));

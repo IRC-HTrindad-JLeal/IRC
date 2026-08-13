@@ -23,6 +23,7 @@ class Server
 {
 	private:
 		static volatile sig_atomic_t sig;
+		static volatile sig_atomic_t receivedSignal;
 
 		int							port;
 		int							serverSocket;
@@ -32,13 +33,15 @@ class Server
 		std::map<std::string, Channel>	channels;
 
 		std::vector<struct pollfd>	fds;
-		// std::vector<std::string>	validCmds;
 		std::string					password;
 		std::string					creationDate;
 		CommandHandler				*_commandHandler;
 
-		void	disconnectClient(int fd);
-		bool	flushClientOutput(int fd);
+		std::time_t	startTime;
+		size_t		acceptedConnectionCount;
+
+		void	disconnectClient(int fd, const std::string &reason);
+		bool	flushClientOutput(int fd, std::string &reason);
 		void	setPollOut(int fd, bool enabled);
 		bool	dispatchMessage(Client &client, const Message &msg);
 
@@ -46,12 +49,14 @@ class Server
 		Server();
 		~Server();
 
+		void				logStatus(int level, const std::string &message) const;
+
 		void				serverThread();
 		void				serverInit(int port, const std::string &password);
 		void				sockIt();
 		void				newClient(const Client &cli);
 		void				acceptClient();
-		bool				retrieveData(int fd);
+		bool				retrieveData(int fd, std::string &reason);
 		static void			handleSig(int signum);
 		void				closeFds();
 		void				clearClients();
