@@ -407,16 +407,19 @@ bool Server::retrieveData(int fd, std::string &reason)
 	}
 	catch (const std::bad_alloc &e)
 	{
+		reason = std::string("Resource error: ") + e.what();
 		std::cerr << RED << fd << "> resource error while processing input" << WHI << '\n';
 		return (false);
 	}
 	catch (const std::exception &e)
 	{
+		reason = std::string("Input processing error: ") + e.what();
 		std::cerr << RED << fd << "> input processing error: " << e.what() << WHI << '\n';
 		return (false);
 	}
 	catch (...)
 	{
+		reason = "Unknown input processing error";
 		std::cerr << RED << fd << "> unknown input processing error" << WHI << '\n';
 		return (false);
 	}
@@ -544,7 +547,7 @@ void		Server::disconnectClient(int fd, const std::string &reason)
 	{
 		std::stringstream msg;
 		msg << "Client unregistered (connection " << fd
-			<< "): " << reason << ":";
+			<< "): " << reason << ".";
 		logStatus(5, msg.str());
 	}
 
