@@ -193,9 +193,19 @@ bool	CommandHandler::ping(Server &server, Client &client, const Message &msg)
 
 bool	CommandHandler::quit(Server &server, Client &client, const Message &msg)
 {
-	(void)server;
-	(void)client;
-	(void)msg;
+	std::string reason;
+
+	if (!msg.getTrailing().empty())
+		reason = msg.getTrailing();
+	else if (msg.paramCount() > 0)
+		reason = msg.getParam(0);
+	else if (client.getNickname().empty())
+		reason = client.getNickname();
+	else
+		reason = "Client Quit";
+	
+	if (client.isRegistered())
+		server.broadcastToClientChannels(client, RPL_QUIT(USRPREFIX(client), reason), client.getFd());
 	return false;
 }
 
