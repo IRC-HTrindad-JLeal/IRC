@@ -6,7 +6,7 @@
 /*   By: mely-pan <mely-pan@student.42lisboa.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/18 16:55:39 by mely-pan          #+#    #+#             */
-/*   Updated: 2026/08/07 15:19:42 by mely-pan         ###   ########.fr       */
+/*   Updated: 2026/08/12 03:22:34 by mely-pan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -456,6 +456,13 @@ static std::string	buildModeStr(const Channel &channel)
 	return modes + params;
 }
 
+struct ModeSegment
+{
+	char		sign;
+	std::string	modes;
+	std::string	params;
+};
+
 bool CommandHandler::mode(Server &server, Client &client, const Message &msg)
 {
 	const std::vector<std::string> params = msg.getParams();
@@ -509,18 +516,22 @@ bool CommandHandler::mode(Server &server, Client &client, const Message &msg)
 	const std::string	&modestr = params[1];
 	size_t				paramIdx = 2;
 	char				sign = '+';
-	std::string			appliedPlus = "";
-	std::string			appliedMinus = "";
-	std::string			appliedPlusParams = "";
-	std::string			appliedMinusParams = "";
 	bool				hasSign = false;
-
+	std::vector<ModeSegment>	segments;
+	ModeSegment					current;
+	current.sign = '+';
+	
 	for (size_t i = 0; i < modestr.size(); ++i)
 	{
 		char c = modestr[i];
 
 		if (c == '+' || c == '-')
 		{
+			if (hasSign && !current.modes.empty())
+				segments.push_back(current);
+			current.sign = c;
+			current.modes = "";
+			current.params = "";
 			sign = c;
 			hasSign = true;
 			continue ;
@@ -530,18 +541,12 @@ bool CommandHandler::mode(Server &server, Client &client, const Message &msg)
 		if (c == 'i')
 		{
     		chan->setInviteOnly(sign == '+');
-    		if (sign == '+')
-				appliedPlus += c;
-    		else
-				appliedMinus += c;
+    		current.modes += c;
 		}
 		else if (c == 't')
 		{
 			chan->setTopicOnly(sign == '+');
-			if (sign == '+')
-				appliedPlus += c;
-			else
-				appliedMinus += c;
+			current.modes += c;
 		}
 		else if (c == 'k')
 		{
@@ -553,14 +558,14 @@ bool CommandHandler::mode(Server &server, Client &client, const Message &msg)
 					continue;
 				}
 				chan->setKey(params[paramIdx]);
-				appliedPlus += c;
-				appliedPlusParams += " " + params[paramIdx];
+				current.modes += c;
+				current.params += " " + params[paramIdx];
 				paramIdx++;
 			}
 			else
 			{
 				chan->clearKey();
-				appliedMinus += c;
+				current.modes += c;
 			}
 		}
 		else if (c == 'o')
@@ -579,17 +584,9 @@ bool CommandHandler::mode(Server &server, Client &client, const Message &msg)
 				paramIdx++;
 				continue;
 			}
-			if (sign == '+')
-			{
-				appliedPlus += c;
-				appliedPlusParams += " " + params[paramIdx]; 
-			}
-			else
-			{
-				appliedMinus += c;
-				appliedMinusParams += " " + params[paramIdx];
-			}
 			chan->setOperator(target_client->getFd(), sign == '+');
+			current.modes += c;
+			current.params += " " + params[paramIdx];
 			paramIdx++;
 		}
 		else if (c == 'l')
@@ -604,6 +601,8 @@ bool CommandHandler::mode(Server &server, Client &client, const Message &msg)
 				//validate all the char are digits
 				const std::string	&limitStr = params[paramIdx];
 				bool				valid = !limitStr.empty();
+				size_t 				numDigits = 0;
+				bool				counting = false;
 
 				for (size_t j = 0; limitStr.size() > j; j++)
 				{
@@ -612,8 +611,13 @@ bool CommandHandler::mode(Server &server, Client &client, const Message &msg)
 						valid = false;
 						break ;
 					}
+					if (counting || limitStr[j] != '0')
+					{
+						counting = true;
+						numDigits++;
+					}
 				}
-				if (!valid)
+				if (!valid || numDigits > 10)
 				{
 					paramIdx++;
 					continue ;
@@ -629,26 +633,27 @@ bool CommandHandler::mode(Server &server, Client &client, const Message &msg)
 					continue ;
 				}
 				chan->setUserLimit(limit);
-				appliedPlusParams += " " + limitStr;
-				appliedPlus += c;
+				current.modes += c;
+				current.params += " " + limitStr;
 				paramIdx++;
 			}
 			else
 			{
 				chan->clearUserLimit();
-				appliedMinus += c;
+				current.modes += c;
 			}
 		}
 		else
 			server.sendToClient(client, ERR_UNKNOWNMODE(client.getNickname(), std::string(1, c)));
 	}
 
-	std::string modeChange = "";
+	if (hasSign && !current.modes.empty())
+		segments.push_back(current);
 	
-	if (!appliedPlus.empty())
-	    modeChange += "+" + appliedPlus + appliedPlusParams;
-	if (!appliedMinus.empty())
-	    modeChange += "-" + appliedMinus + appliedMinusParams;
+	std::string modeChange = "";
+
+	for (size_t i = 0; i < segments.size(); ++i)
+		modeChange += segments[i].sign + segments[i].modes + segments[i].params;
 	if (!modeChange.empty())
 	    server.broadcastToChannel(*chan, RPL_MODE(USRPREFIX(client), target, modeChange), -1);
     return (true);
@@ -805,6 +810,8 @@ bool CommandHandler::kick(Server &server, Client &client, const Message &msg)
 	
 	server.broadcastToChannel(*chan, RPL_KICK(USRPREFIX(client), chanName, targetNick, reason), -1);
 	chan->removeMember(targetClient->getFd());
+	if (chan->empty())
+		server.removeChannel(chanName);
     return (true);
 }
 
