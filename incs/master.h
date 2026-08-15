@@ -33,6 +33,8 @@
 #include <cerrno>
 #include <cstdlib>
 #include <cstring>
+#include <time.h>
+#include <ctime>
 
 #define RED "\e[1;31m"
 #define WHI "\e[0;37m"

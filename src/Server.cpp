@@ -14,28 +14,47 @@
 #include <CommandHandler.h>
 #include <Message.h>
 #include <master.h>
-#include <ctime>
 
 volatile sig_atomic_t Server::sig = 1;
+volatile sig_atomic_t Server::receivedSignal = 0;
+
+static std::string	signalName(int signum)
+{
+	if (signum == SIGINT)
+		return ("Interrupt");
+	if (signum == SIGQUIT)
+		return ("Quit");
+	return ("Unknown");
+}
+
+void	Server::logStatus(int level, const std::string &message) const
+{
+		std::cout << "[" << getpid() << ":" << level << " "
+			<< (std::time(NULL) - startTime) << "] "
+			<< message << '\n';
+}
+
+static std::string	clientHostPort(const Client &client)
+{
+	std::stringstream ss;
+
+	ss << client.getIp() << ":" << client.getPort();
+	return (ss.str());
+}
+
+static std::string	clientMask(const Client &client)
+{
+	std::stringstream ss;
+
+	ss << client.getNickname() << "!"
+			<< client.getUsername() << "@"
+			<< client.getIp();
+	return (ss.str());
+}
 
 Server::Server()
 {
 	_commandHandler = NULL;
-	/*
-	validCmds.push_back("PASS");
-	validCmds.push_back("QUIT");
-	validCmds.push_back("PING");
-	validCmds.push_back("PONG");
-	validCmds.push_back("KICK");
-	validCmds.push_back("INVITE");
-	validCmds.push_back("TOPIC");
-	validCmds.push_back("MODE");
-	validCmds.push_back("PRIVMSG");
-	validCmds.push_back("JOIN");
-	validCmds.push_back("USER");
-	validCmds.push_back("NICK");
-	validCmds.push_back("CAP");
-	*/
 	serverSocket = -1;
 }
 
@@ -80,32 +99,95 @@ void		Server::serverThread()
 			struct pollfd pfd = fds[i - 1];
 			int fd = pfd.fd;
 			bool disconnect = false;
+			
+			std::string	reason;
 
-			if (pfd.revents & (POLLERR | POLLHUP | POLLNVAL)) 
+			if (pfd.revents & POLLNVAL) 
 			{
 				if (fd != serverSocket)
+				{
+					reason = "Invalid socket descriptor";
 					disconnect = true;
+				}
+			}
+			else if (pfd.revents & POLLERR)
+			{
+				if (fd != serverSocket)
+				{
+					reason = "Socket error";
+					disconnect = true;
+				}
+			}
+			else if (pfd.revents & POLLHUP)
+			{
+				if (fd != serverSocket)
+				{
+					reason = "Client closed connection";
+					disconnect = true;
+				}
 			}
 			else if (fd == serverSocket && (pfd.revents & POLLIN))
 				acceptClient();
 			else
 			{
-				if ((pfd.revents & POLLIN) && !retrieveData(fd))
+				if ((pfd.revents & POLLIN) && !retrieveData(fd, reason))
 					disconnect = true;
-				if (!disconnect && (pfd.revents & POLLOUT) && !flushClientOutput(fd))
+				if (!disconnect && (pfd.revents & POLLOUT) && !flushClientOutput(fd, reason))
 					disconnect = true;
 			}
-		if (disconnect)
-			disconnectClient(fd);
+			if (disconnect)
+			{
+				if (reason.empty())
+					reason = "Client closed connection";
+				disconnectClient(fd, reason);
+			}
 		}
 	}
 
-	std::cout << YEL << "shutting down" << WHI << '\n';
+	if (receivedSignal != 0)
+	{
+		std::stringstream signalMsg;
+
+		signalMsg << "Got signal \"" << signalName(receivedSignal) << "\" ...";
+		logStatus(6, signalMsg.str());
+	}
+
+	logStatus(5, "Server going down NOW!");
+
+	for (size_t i = fds.size(); i > 0; --i)
+	{
+		int fd = fds[i - 1].fd;
+		
+		if (fd != serverSocket)
+			disconnectClient(fd, "Server shutdown");
+	}
+
+	int listenerCount = 0;
+
+	for (size_t i = 0; i < fds.size(); ++i)
+	{
+		if (fds[i].fd == serverSocket)
+			++listenerCount;
+	}
+
+	std::stringstream socketMsg;
+	socketMsg << "Shutting down all listening sockets ("
+		<< listenerCount << " total) ...";
+	logStatus(6, socketMsg.str());
+
 	closeFds();
 	clearClients();
+
+	std::stringstream doneMsg;
+	doneMsg << "ft_irc done, served " << acceptedConnectionCount
+		<< " connection";
+	if (acceptedConnectionCount != 1)
+		doneMsg << 's';
+	doneMsg << '.';
+	logStatus(5, doneMsg.str());
 }
 
-bool	Server::flushClientOutput(int fd)
+bool	Server::flushClientOutput(int fd, std::string &reason)
 {
 	Client *client = findClientByFd(fd);
 
@@ -120,15 +202,19 @@ bool	Server::flushClientOutput(int fd)
 
 		if (sent < 0)
 		{
-			if (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK)
+			int err = errno;
+
+			if (err == EINTR || err == EAGAIN || err == EWOULDBLOCK)
 				return (true);
-			if (errno == EPIPE || errno == ECONNRESET)
-				return (false);
+			reason = std::string("Write error: ") + strerror(err);
 			return (false);
 		}
 
 		if (sent == 0)
+		{
+			reason = "Write error: send returned 0";
 			return (false);
+		}
 
 		client->consumeOutput(static_cast<size_t>(sent));
 
@@ -198,6 +284,7 @@ void Server::acceptClient()
 			Client cli;
 			cli.setFd(clientFd);
 			cli.setIp(inet_ntoa(clientAddr.sin_addr));
+			cli.setPort(ntohs(clientAddr.sin_port));
 			newClient(cli);
 			clientAdded = true;
 	
@@ -206,7 +293,16 @@ void Server::acceptClient()
 			pfd.events = POLLIN;
 			pfd.revents = 0;
 			fds.push_back(pfd);
-			std::cout << GRE << clientFd << "> client connected" << WHI << '\n';
+			++acceptedConnectionCount;
+
+			std::stringstream msg;
+			msg << "Accepted connection " << clientFd
+				<< " from \"" << cli.getIp() << ":" << cli.getPort()
+				<< "\" on socket " << serverSocket << ".";
+			logStatus(6, msg.str());
+
+			//std::cout << GRE << clientFd << "> client connected" << WHI << '\n';
+			
 		}
 		catch (const std::exception &e)
 		{
@@ -226,19 +322,29 @@ void		Server::serverInit(int port, const std::string &password)
 		throw std::runtime_error("Password cannot be empty");
 	this->port = port;
 	this->password = password;
-	
-	std::time_t now = std::time(NULL);
-	char		buf[64];
-	std::strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", std::localtime(&now));
-	this-> creationDate = std::string(buf);
-	
+	startTime = std::time(NULL);
+	acceptedConnectionCount = 0;
+
+	char buf[64];
+	std::strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", std::localtime(&startTime));
+	creationDate = std::string(buf);
+
+	logStatus(5, "ft_irc 42 starting ...");
+
+	std::stringstream config;
+	config << "Using command-line configuration: port " << port << ".";
+	logStatus(6, config.str());
+
 	_commandHandler = new CommandHandler();
 	sockIt();
-	std::cout << GRE << serverSocket << "> Connection succesfull" << WHI << '\n';
+
+	logStatus(6, "IO subsystem: poll (initial descriptors 1).");
+	logStatus(5, "Server \"ft_irc\" ready.");
+
 	serverThread();
 }
 
-bool Server::retrieveData(int fd)
+bool Server::retrieveData(int fd, std::string &reason)
 {
 	Client	*client = findClientByFd(fd);
 	char	buffer[LINE_LEN_BUF_MAX];
@@ -250,12 +356,14 @@ bool Server::retrieveData(int fd)
 	bytes = recv(fd, buffer, LINE_LEN_BUF_MAX, 0);
 	if (bytes == 0)
 	{
+		reason = "Client closed connection";
 		return (false);
 	}
 	if (bytes < 0)
 	{
 		if (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK)
 			return (true);
+		reason = std::string("Read error: ") + strerror(errno);
 		return (false);
 	}
 
@@ -264,7 +372,10 @@ bool Server::retrieveData(int fd)
 		std::string chunk(buffer, static_cast<size_t>(bytes));
 
 		if (!client->appendToReadBuffer(chunk))
+		{
+			reason = "Input line too long";
 			return (false);
+		}
 
 		while(client->hasCompleteLine())
 		{
@@ -285,21 +396,30 @@ bool Server::retrieveData(int fd)
 				continue;
 			}
 			if (!dispatchMessage(*client, msg))
+			{
+				if (msg.getCommand() == "QUIT")
+					reason = "Got QUIT command";
+				else
+					reason = "Client closed connection";
 				return (false);
+			}
 		}
 	}
 	catch (const std::bad_alloc &e)
 	{
+		reason = std::string("Resource error: ") + e.what();
 		std::cerr << RED << fd << "> resource error while processing input" << WHI << '\n';
 		return (false);
 	}
 	catch (const std::exception &e)
 	{
+		reason = std::string("Input processing error: ") + e.what();
 		std::cerr << RED << fd << "> input processing error: " << e.what() << WHI << '\n';
 		return (false);
 	}
 	catch (...)
 	{
+		reason = "Unknown input processing error";
 		std::cerr << RED << fd << "> unknown input processing error" << WHI << '\n';
 		return (false);
 	}
@@ -360,6 +480,10 @@ void		Server::sockIt()
 		fds.push_back(pfd); // off you go
 
 		serverSocket = fd;
+		std::stringstream msg;
+		msg << "Now listening on [0.0.0.0]:" << port
+			<< " (socket " << serverSocket << ").";
+		logStatus(6, msg.str());
 	}
 	catch (...)
 	{
@@ -380,7 +504,7 @@ Client	*Server::findClientByFd(int fd)
 
 void		Server::closeFds()
 {
-	std::cout << YEL << "---closing all file descriptors---" << WHI << '\n';
+	// std::cout << YEL << "---closing all file descriptors---" << WHI << '\n';
 	while (!fds.empty())
 	{
 		close(fds.back().fd);
@@ -388,12 +512,44 @@ void		Server::closeFds()
 	}
 }
 
-void		Server::disconnectClient(int fd)
+void		Server::disconnectClient(int fd, const std::string &reason)
 {
-	Client *client = findClientByFd(fd);
+	Client		*client = findClientByFd(fd);
+	std::string	hostPort = "unknown:0";
+	std::string	mask;
+	bool		registered = false;
 
 	if (fd == serverSocket)
 		return;
+	
+	if (client)
+	{
+		hostPort = clientHostPort(*client);
+		registered = client->isRegistered();
+		if (registered)
+			mask = clientMask(*client);
+	}
+
+	std::stringstream shutting;
+	shutting << "Shutting down connection " << fd
+		<< " (" << reason << ") with \""
+		<< hostPort << "\" ...";
+	logStatus(6, shutting.str());
+
+	if (registered)
+	{
+		std::stringstream msg;
+		msg << "User \"" << mask << "\" unregistered "
+			<< "(connection " << fd << "): " << reason << ":";
+		logStatus(5, msg.str());
+	}
+	else
+	{
+		std::stringstream msg;
+		msg << "Client unregistered (connection " << fd
+			<< "): " << reason << ".";
+		logStatus(5, msg.str());
+	}
 
 	if (client && !client->getNickname().empty())
 	{
@@ -404,7 +560,6 @@ void		Server::disconnectClient(int fd)
 	}
 
 	removeClientFromChannels(fd);
-
 	close(fd);
 
 	std::vector<struct pollfd>::iterator fdit;
@@ -420,7 +575,10 @@ void		Server::disconnectClient(int fd)
 	
 	clients.erase(fd);
 
-	std::cout << YEL << fd << "> client disconnected" << WHI << '\n';
+	std::stringstream closed;
+	closed << "Connection " << fd << " with \""
+		<< hostPort << "\" closed.";
+	logStatus(6, closed.str());
 }
 
 void		Server::clearClients() {
@@ -431,7 +589,7 @@ void		Server::clearClients() {
 
 void		Server::handleSig(int signum)
 {
-	(void)signum;
+	Server::receivedSignal = signum;
 	Server::sig = 0;
 }
 

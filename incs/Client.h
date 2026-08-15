@@ -18,8 +18,7 @@ class Client
 	private:
 		int			fd;
 		std::string	ip;
-		// the Channel class should handle operators
-		// bool		op;
+		int			port;
 
 		std::string				readBuffer;
 		std::deque<std::string>	sendQueue;
@@ -41,7 +40,7 @@ class Client
 
 		int					getFd() const;
 		const std::string	&getIp() const;
-		//bool				getOp() const;
+		int					getPort() const;
 
 		const std::string	&getNickname() const;
 		const std::string	&getUsername() const;
@@ -52,7 +51,7 @@ class Client
 
 		void	setFd(int fd);
 		void	setIp(const std::string &ip);
-		//void	setOp(bool op);
+		void	setPort(int port);
 		
 		void	setNick(const std::string &nickname);
 		void	setUsername(const std::string &username);
