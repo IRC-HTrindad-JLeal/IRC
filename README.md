@@ -15,6 +15,7 @@ The server follows the IRC protocol as defined in RFC 1459 and RFC 2812, and is 
 - A C++98-compatible compiler (g++ or clang++)
 - GNU Make
 - A Unix-based system (Linux or macOS)
+
 ### Compilation
  
 ```bash
@@ -29,6 +30,7 @@ make
  
 - `<port>` — the port number the server will listen on (e.g. `6667`)
 - `<password>` — the connection password clients must provide
+
 ### Connecting with a client
  
 Using netcat for quick testing:
@@ -37,12 +39,6 @@ nc -C 127.0.0.1 6667
 PASS <password>
 NICK mynick
 USER mynick 0 * :My Name
-```
- 
-Using irssi:
-```bash
-irssi
-/connect -port 6667 -password <password> 127.0.0.1
 ```
  
 ### Cleanup
@@ -62,18 +58,21 @@ make re		# recompilation
 - `CAP` — minimal IRCv3 capability negotiation
 - `PING` / `PONG` — keepalive handling
 - `QUIT` — graceful client disconnection with channel broadcast
+
 ### Channel Operations
 - `JOIN` — join or create channels, with support for channel keys and invite lists
 - `PRIVMSG` — send messages to channels or directly to users
 - `TOPIC` — view or set the channel topic (respects `+t` mode)
 - `INVITE` — invite users to channels (respects `+i` mode)
 - `KICK` — remove users from channels (operators only)
+
 ### Channel Modes
 - `+i` — invite-only
 - `+t` — topic restricted to operators
 - `+k` — channel key (password)
 - `+o` — grant/revoke operator status
 - `+l` — user limit
+
 ## Usage Examples
  
 ### Register and join a channel
@@ -111,14 +110,17 @@ INVITE carol #secret
 - [RFC 2812 — IRC Client Protocol](https://datatracker.ietf.org/doc/html/rfc2812)
 - [Modern IRC Documentation](https://modern.ircdocs.horse)
 - [Bircd manual](https://ircd.bircd.org/manual.html)
+
 ### Tools
 - [irssi IRC client](https://irssi.org)
+
 ### AI Usage
  
 Claude and Codex was used throughout the development of this project as a technical assistant. Its use was limited to the following tasks:
  
-- **Command implementation** — helping review the logic for IRC commands
-- **Debugging** — Creating debugging functions
-- **Documentation** — helping design this readme file
+- **Code Review** — helping review code implementation and give feedback
+- **Research** — helping with research and general explanaitons on the subject of IRC servers and the IRC protocol
+- **Debugging** — Creating debugging programs and test harnesses
+- **Documentation** — helping design this readme file and other reference files
 All code was written, understood, and validated by the project authors. AI was used as a reference and review tool, not as a code generator.
  
