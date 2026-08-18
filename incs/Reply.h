@@ -12,6 +12,8 @@
 
 #pragma once
 
+#include <master.h>
+
 // Server name (for now)
 #define SRV "ft_irc.42"
 
@@ -130,7 +132,7 @@
 	(":" SRV " 432 " + (nick) + " " + (badnick) + " :Erroneous nickname")
 
 #define ERR_NICKTOOLONG(client, nick) \
-	(":" SRV " 432 " + (client) + " " + (nick) + " :Nickname too long, max. 9 characters")
+	(":" SRV " 432 " + (client) + " " + (nick) + " :Nickname too long, max. " + STRINGIFY(MAX_NICK_LENGTH) + " characters")
 
 #define ERR_NICKNAMEINUSE(nick, badnick) \
 	(":" SRV " 433 " + (nick) + " " + (badnick) + " :Nickname is already in use")

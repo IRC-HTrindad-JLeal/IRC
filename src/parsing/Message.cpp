@@ -192,6 +192,13 @@ Message					Message::parse(const std::string &raw)
 	if (token.empty())
 		throw std::runtime_error("missing command");
 
+	for (std::string::size_type i = 0; i < token.size(); ++i)
+	{
+		token[i] = static_cast<char>(
+			std::toupper(static_cast<unsigned char>(token[i]))
+		);
+	}
+
 	message.setCommand(token);
 	parseParams(ss, message);
 	return message;

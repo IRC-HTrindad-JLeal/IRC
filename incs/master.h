@@ -35,6 +35,7 @@
 #include <cstring>
 #include <time.h>
 #include <ctime>
+#include <cctype>
 
 #define RED "\e[1;31m"
 #define WHI "\e[0;37m"
@@ -46,4 +47,10 @@
 #define MAX_QUEUED_BYTES 262144 // 256 KiB
 
 #define PORT_MAX 0xffff // basically USHRT_MAX in case someone's short is not really a 16-bit number.
+
+#define STRINGIFY_IMPL(value) #value
+
+#define STRINGIFY(value) STRINGIFY_IMPL(value)
+
+#define MAX_NICK_LENGTH 9
 

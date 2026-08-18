@@ -14,6 +14,7 @@
 #include <CommandHandler.h>
 #include <Message.h>
 #include <master.h>
+#include <Reply.h>
 
 volatile sig_atomic_t Server::sig = 1;
 volatile sig_atomic_t Server::receivedSignal = 0;
@@ -300,9 +301,6 @@ void Server::acceptClient()
 				<< " from \"" << cli.getIp() << ":" << cli.getPort()
 				<< "\" on socket " << serverSocket << ".";
 			logStatus(6, msg.str());
-
-			//std::cout << GRE << clientFd << "> client connected" << WHI << '\n';
-			
 		}
 		catch (const std::exception &e)
 		{
@@ -504,7 +502,6 @@ Client	*Server::findClientByFd(int fd)
 
 void		Server::closeFds()
 {
-	// std::cout << YEL << "---closing all file descriptors---" << WHI << '\n';
 	while (!fds.empty())
 	{
 		close(fds.back().fd);
@@ -557,6 +554,14 @@ void		Server::disconnectClient(int fd, const std::string &reason)
 		it = nicknames.find(client->getNickname());
 		if (it != nicknames.end() && it->second == fd)
 			nicknames.erase(it);
+	}
+
+	if (registered && reason != "Got QUIT command")
+	{
+		broadcastToClientChannels(*client,
+			RPL_QUIT(USRPREFIX(*client), reason),
+			fd
+		);
 	}
 
 	removeClientFromChannels(fd);
