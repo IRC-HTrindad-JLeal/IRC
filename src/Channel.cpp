@@ -86,6 +86,16 @@ bool	Channel::addMember(int fd, bool op)
 	return (true);
 }
 
+bool	Channel::consumeInvite(int fd)
+{
+	std::map<int, bool>::iterator it = invited.find(fd);
+
+	if (it == invited.end())
+		return (false);
+	invited.erase(it);
+	return (true);
+}
+
 void	Channel::removeMember(int fd)
 {
 	members.erase(fd);

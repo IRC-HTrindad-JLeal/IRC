@@ -37,6 +37,8 @@ class Channel
 		const std::string	&getTopic() const;
 		const std::string	&getKey() const;
 
+		bool	consumeInvite(int fd);
+
 		size_t	getUserLimit() const;
 		bool	isInviteOnly() const;
 		bool	isTopicOnly() const;

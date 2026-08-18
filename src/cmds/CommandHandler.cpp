@@ -6,7 +6,7 @@
 /*   By: mely-pan <mely-pan@student.42lisboa.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/18 16:55:39 by mely-pan          #+#    #+#             */
-/*   Updated: 2026/08/12 03:22:34 by mely-pan         ###   ########.fr       */
+/*   Updated: 2026/08/18 14:44:04 by jordanleal       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -125,12 +125,12 @@ bool	CommandHandler::nick(Server &server, Client &client, const Message &msg)
 		server.sendToClient(client, ERR_NICKNAMEINUSE(nickOrStar(client), nick));
 		return true;
 	}
-	if(!server.isNicknameAvailable(nick))
+	if(!nickValid(nick))
 	{
 		server.sendToClient(client, ERR_ERRONEUSNICKNAME(nickOrStar(client), nick));
 		return true;
 	}
-	if (nick.size() > 9)
+	if (nick.size() > MAX_NICK_LENGTH)
 	{
 		server.sendToClient(client, ERR_NICKTOOLONG(nickOrStar(client), nick));
 		return true;
@@ -333,18 +333,17 @@ bool CommandHandler::join(Server &server, Client &client, const Message &msg)
 		if (channel.hasMember(client.getFd()))
 			continue;
 
+		bool invited = channel.consumeInvite(client.getFd());
+
 		if (channel.isFull())
 		{
 			server.sendToClient(client, ERR_CHANNELISFULL(client.getNickname(), target));
 			continue;
 		}
-		if (channel.isInviteOnly())
+		if (channel.isInviteOnly() && !invited)
 		{
-			if (!channel.isInvited(client.getFd()))
-			{
-				server.sendToClient(client, ERR_INVITEONLYCHAN(client.getNickname(), target));
-				continue;
-			}
+			server.sendToClient(client, ERR_INVITEONLYCHAN(client.getNickname(), target));
+			continue;
 		}
 		if (channel.hasKey())
 		{
@@ -363,9 +362,6 @@ bool CommandHandler::join(Server &server, Client &client, const Message &msg)
 			// handle case where addMember fails
 			return (true);
 		}
-
-		if (channel.isInvited(client.getFd()))
-			channel.uninvite(client.getFd());
 
 		if (channel.getTopic().empty())
 			server.sendToClient(client, RPL_NOTOPIC(client.getNickname(), target));
